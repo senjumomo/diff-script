@@ -161,7 +161,7 @@ function App() {
       <textarea
         value={inputText}
         onChange={onInputChange}
-        placeholder="Paste deployment scripts..."
+        placeholder="Paste deployment scripts...XX"
         style={styles.textarea}
       />
 
