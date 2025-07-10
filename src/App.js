@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-// Client paths including Test client with TEST environment
+// Client paths including Test and Regression clients with single environments
 const clientPaths = {
   Bestmed: {
     QA: "Q:\\BestMed\\qa\\sql",
@@ -37,17 +37,29 @@ const clientPaths = {
   Test: {
     TEST: "Q:\\iThrive\\test\\sql",
   },
+  Regression: {
+    REGRESSION: "Q:\\SHIP\\qa\\regression\\deployed\\sql",
+  },
 };
 
 const clients = Object.keys(clientPaths);
-const environments = ["QA", "LIVE"]; // Normal envs
+const environments = ["QA", "LIVE"];
+
+const isSingleEnvClient = (client) =>
+  client === "Test" || client === "Regression";
+
+const getEnvForClient = (client) =>
+  client === "Test"
+    ? "TEST"
+    : client === "Regression"
+    ? "REGRESSION"
+    : "QA";
 
 function App() {
-  // Initialize environment based on initial client
   const initialClientA = clients[0];
   const initialClientB = clients[1];
-  const initialEnvA = initialClientA === "Test" ? "TEST" : "QA";
-  const initialEnvB = initialClientB === "Test" ? "TEST" : "LIVE";
+  const initialEnvA = getEnvForClient(initialClientA);
+  const initialEnvB = getEnvForClient(initialClientB);
 
   const [inputText, setInputText] = useState("");
   const [outputFiles, setOutputFiles] = useState("");
@@ -62,27 +74,14 @@ function App() {
     return matches || [];
   };
 
-  const updateOutputs = (
-    text,
-    clientAVal,
-    envAVal,
-    clientBVal,
-    envBVal
-  ) => {
+  const updateOutputs = (text, clientAVal, envAVal, clientBVal, envBVal) => {
     const files = extractFiles(text);
     setOutputFiles(files.join("\n"));
 
     const pathA =
-      clientPaths[clientAVal] &&
-      clientPaths[clientAVal][clientAVal === "Test" ? "TEST" : envAVal]
-        ? clientPaths[clientAVal][clientAVal === "Test" ? "TEST" : envAVal]
-        : "";
-
+      clientPaths[clientAVal]?.[envAVal] || "";
     const pathB =
-      clientPaths[clientBVal] &&
-      clientPaths[clientBVal][clientBVal === "Test" ? "TEST" : envBVal]
-        ? clientPaths[clientBVal][clientBVal === "Test" ? "TEST" : envBVal]
-        : "";
+      clientPaths[clientBVal]?.[envBVal] || "";
 
     if (files.length && pathA && pathB) {
       const diffs = files.map((file) => {
@@ -104,13 +103,9 @@ function App() {
   const onClientAChange = (e) => {
     const val = e.target.value;
     setClientA(val);
-    if (val === "Test") {
-      setEnvA("TEST");
-      updateOutputs(inputText, val, "TEST", clientB, envB);
-    } else {
-      setEnvA("QA");
-      updateOutputs(inputText, val, "QA", clientB, envB);
-    }
+    const env = getEnvForClient(val);
+    setEnvA(env);
+    updateOutputs(inputText, val, env, clientB, envB);
   };
 
   const onEnvAChange = (e) => {
@@ -122,13 +117,9 @@ function App() {
   const onClientBChange = (e) => {
     const val = e.target.value;
     setClientB(val);
-    if (val === "Test") {
-      setEnvB("TEST");
-      updateOutputs(inputText, clientA, envA, val, "TEST");
-    } else {
-      setEnvB("LIVE");
-      updateOutputs(inputText, clientA, envA, val, "LIVE");
-    }
+    const env = getEnvForClient(val);
+    setEnvB(env);
+    updateOutputs(inputText, clientA, envA, val, env);
   };
 
   const onEnvBChange = (e) => {
@@ -184,7 +175,7 @@ function App() {
           </select>
         </div>
 
-        {clientA !== "Test" && (
+        {!isSingleEnvClient(clientA) && (
           <div style={styles.dropdownBox}>
             <label style={styles.label}>Environment A:</label>
             <select value={envA} onChange={onEnvAChange} style={styles.select}>
@@ -204,7 +195,7 @@ function App() {
           </select>
         </div>
 
-        {clientB !== "Test" && (
+        {!isSingleEnvClient(clientB) && (
           <div style={styles.dropdownBox}>
             <label style={styles.label}>Environment B:</label>
             <select value={envB} onChange={onEnvBChange} style={styles.select}>
