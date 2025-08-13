@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { FaGithub } from "react-icons/fa";
+
 
 // Client paths including Test and Regression clients with single environments
 const clientPaths = {
@@ -156,7 +158,7 @@ function App() {
         rel="noopener noreferrer"
         style={styles.githubLink}
       >
-        View on GitHub
+        <FaGithub size={28} /> {/* adjust the size as you like */}
       </a>
 
       <h2 style={styles.heading}>Paste your deployment scripts here:</h2>
@@ -246,8 +248,8 @@ const styles = {
     textDecoration: "none",
     fontWeight: "bold",
     fontSize: "1rem",
-    alignSelf: "flex-end", // push it to the right
     marginBottom: "1rem",
+    transition: "color 0.2s",
   },
   container: {
     padding: "2rem",
