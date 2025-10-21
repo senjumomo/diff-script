@@ -147,7 +147,7 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "diff_commands.bat";
+    a.download = `diff_commands_${envA}_${envB}.bat`;
     a.click();
     URL.revokeObjectURL(url);
   };
