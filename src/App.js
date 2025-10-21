@@ -162,7 +162,10 @@ function App() {
         rel="noopener noreferrer"
         style={styles.githubLink}
       >
-        <FaGithub size={28} /> {/* adjust the size as you like */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <FaGithub size={28} /> {/* adjust the size as you like */}
+          <div style={{ marginTop: '5px', fontSize: '14px' }}>My GitHub</div>
+        </div>
       </a>
 
       <h2 style={styles.heading}>Paste your deployment scripts here:</h2>
