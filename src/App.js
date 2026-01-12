@@ -74,36 +74,78 @@ function App() {
   const [clientB, setClientB] = useState(initialClientB);
   const [envB, setEnvB] = useState(initialEnvB);
   const [diffCommands, setDiffCommands] = useState("");
+  const [diffAllQA, setDiffAllQA] = useState(false);
+  const [diffAllProd, setDiffAllProd] = useState(false);
 
   const extractFiles = (text) => {
     const matches = text.match(/\b[\w\-_]+\.sql\b/gi);
     return matches || [];
   };
 
-  const updateOutputs = (text, clientAVal, envAVal, clientBVal, envBVal) => {
+  const updateOutputs = (text, clientAVal, envAVal, clientBVal, envBVal, diffAllQAMode, diffAllProdMode) => {
     const files = extractFiles(text);
     setOutputFiles(files.join("\n"));
 
-    const pathA =
-      clientPaths[clientAVal]?.[envAVal] || "";
-    const pathB =
-      clientPaths[clientBVal]?.[envBVal] || "";
+    const pathA = clientPaths[clientAVal]?.[envAVal] || "";
 
-    if (files.length && pathA && pathB) {
-      const diffs = files.map((file) => {
-        const diffFile = file.replace(/\.sql$/i, ".diff");
-        return `diff -iwc "${pathA}\\${file}" "${pathB}\\${file}" > ${diffFile}`;
-      });
-      setDiffCommands(diffs.join("\n"));
-    } else {
+    if (!files.length || !pathA) {
       setDiffCommands("");
+      return;
+    }
+
+    if (diffAllQAMode || diffAllProdMode) {
+      // Determine target environment based on which toggle is active
+      const targetEnv = diffAllQAMode ? "QA" : "LIVE";
+      
+      // Diff against all other clients in the target environment
+      const targetClients = clients.filter(c => {
+        // Exclude the source client
+        if (c === clientAVal) return false;
+        // Check if the target client has the target environment
+        const hasEnv = clientPaths[c]?.[targetEnv];
+        return hasEnv !== undefined;
+      });
+
+      if (targetClients.length === 0) {
+        setDiffCommands("");
+        return;
+      }
+
+      let allCommands = [];
+      
+      targetClients.forEach(targetClient => {
+        const pathB = clientPaths[targetClient][targetEnv];
+        allCommands.push(`\n# ========================================`);
+        allCommands.push(`# ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
+        allCommands.push(`# ========================================`);
+        
+        files.forEach(file => {
+          const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.sql$/i, ".diff")}`;
+          allCommands.push(`diff -iwc "${pathA}\\${file}" "${pathB}\\${file}" > ${diffFile}`);
+        });
+      });
+
+      setDiffCommands(allCommands.join("\n"));
+    } else {
+      // Original single diff logic
+      const pathB = clientPaths[clientBVal]?.[envBVal] || "";
+      
+      if (pathB) {
+        const diffs = files.map((file) => {
+          const diffFile = file.replace(/\.sql$/i, ".diff");
+          return `diff -iwc "${pathA}\\${file}" "${pathB}\\${file}" > ${diffFile}`;
+        });
+        setDiffCommands(diffs.join("\n"));
+      } else {
+        setDiffCommands("");
+      }
     }
   };
 
   const onInputChange = (e) => {
     const val = e.target.value;
     setInputText(val);
-    updateOutputs(val, clientA, envA, clientB, envB);
+    updateOutputs(val, clientA, envA, clientB, envB, diffAllQA, diffAllProd);
   };
 
   const onClientAChange = (e) => {
@@ -111,13 +153,13 @@ function App() {
     setClientA(val);
     const env = getEnvForClient(val);
     setEnvA(env);
-    updateOutputs(inputText, val, env, clientB, envB);
+    updateOutputs(inputText, val, env, clientB, envB, diffAllQA, diffAllProd);
   };
 
   const onEnvAChange = (e) => {
     const val = e.target.value;
     setEnvA(val);
-    updateOutputs(inputText, clientA, val, clientB, envB);
+    updateOutputs(inputText, clientA, val, clientB, envB, diffAllQA, diffAllProd);
   };
 
   const onClientBChange = (e) => {
@@ -125,13 +167,27 @@ function App() {
     setClientB(val);
     const env = getEnvForClient(val);
     setEnvB(env);
-    updateOutputs(inputText, clientA, envA, val, env);
+    updateOutputs(inputText, clientA, envA, val, env, diffAllQA, diffAllProd);
   };
 
   const onEnvBChange = (e) => {
     const val = e.target.value;
     setEnvB(val);
-    updateOutputs(inputText, clientA, envA, clientB, val);
+    updateOutputs(inputText, clientA, envA, clientB, val, diffAllQA, diffAllProd);
+  };
+
+  const onDiffAllQAToggle = () => {
+    const newValue = !diffAllQA;
+    setDiffAllQA(newValue);
+    if (newValue) setDiffAllProd(false); // Only one can be active
+    updateOutputs(inputText, clientA, envA, clientB, envB, newValue, false);
+  };
+
+  const onDiffAllProdToggle = () => {
+    const newValue = !diffAllProd;
+    setDiffAllProd(newValue);
+    if (newValue) setDiffAllQA(false); // Only one can be active
+    updateOutputs(inputText, clientA, envA, clientB, envB, false, newValue);
   };
 
   const copyToClipboard = () => {
@@ -169,12 +225,47 @@ function App() {
       </a>
 
       <h2 style={styles.heading}>Paste your deployment scripts here:</h2>
-      <textarea
-        value={inputText}
-        onChange={onInputChange}
-        placeholder="Paste deployment script instructions here"
-        style={styles.textarea}
-      />
+      
+      <div style={styles.topContainer}>
+        <textarea
+          value={inputText}
+          onChange={onInputChange}
+          placeholder="Paste deployment script instructions here"
+          style={styles.textarea}
+        />
+      </div>
+
+      <div style={styles.optionsPaneContainer}>
+        <div style={styles.optionsPane}>
+          <h3 style={styles.optionsPaneTitle}>Options</h3>
+          
+          {/* Toggle for diff all QA clients */}
+          <div style={styles.toggleBox}>
+            <label style={styles.label}>
+              <input
+                type="checkbox"
+                checked={diffAllQA}
+                onChange={onDiffAllQAToggle}
+                style={styles.checkbox}
+              />
+              Diff against all QA environments
+            </label>
+          </div>
+
+          {/* Toggle for diff all LIVE clients */}
+          <div style={styles.toggleBox}>
+            <label style={styles.label}>
+              <input
+                type="checkbox"
+                checked={diffAllProd}
+                onChange={onDiffAllProdToggle}
+                style={styles.checkbox}
+              />
+              Diff against all LIVE environments
+            </label>
+          </div>
+        </div>
+      </div>
 
       <h2 style={{ ...styles.heading, marginTop: "2rem" }}>
         Extracted .sql filenames:
@@ -291,7 +382,8 @@ const styles = {
   diffTextarea: {
     width: "100%",
     maxWidth: "900px",
-    height: "150px",
+    minHeight: "300px",
+    maxHeight: "600px",
     padding: "0.75rem 1rem",
     fontSize: "1rem",
     borderRadius: "8px",
@@ -304,6 +396,19 @@ const styles = {
     overflowX: "auto",
     fontFamily: "monospace",
   },
+  topContainer: {
+    display: "flex",
+    justifyContent: "center",
+    width: "100%",
+    alignItems: "center",
+  },
+  optionsPaneContainer: {
+    position: "fixed",
+    right: "2rem",
+    top: "50%",
+    transform: "translateY(-50%)",
+    zIndex: 1000,
+  },
   dropdownContainer: {
     display: "flex",
     justifyContent: "center",
@@ -311,6 +416,26 @@ const styles = {
     flexWrap: "wrap",
     maxWidth: "900px",
     marginTop: "1rem",
+  },
+  optionsPane: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+    padding: "1.5rem",
+    backgroundColor: "#2c2c44",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+    minWidth: "250px",
+    maxWidth: "300px",
+    height: "fit-content",
+  },
+  optionsPaneTitle: {
+    margin: "0 0 0.5rem 0",
+    fontSize: "1.2rem",
+    fontWeight: "600",
+    color: "#eee",
+    borderBottom: "2px solid #3a8bff",
+    paddingBottom: "0.5rem",
   },
   dropdownBox: {
     display: "flex",
@@ -354,6 +479,21 @@ const styles = {
     border: "none",
     backgroundColor: "#28c76f",
     color: "#fff",
+    cursor: "pointer",
+  },
+  toggleBox: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    minWidth: "200px",
+    padding: "0.5rem",
+    backgroundColor: "#2c2c44",
+    borderRadius: "6px",
+  },
+  checkbox: {
+    marginRight: "0.5rem",
+    width: "18px",
+    height: "18px",
     cursor: "pointer",
   },
 };
