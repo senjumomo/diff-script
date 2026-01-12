@@ -115,9 +115,9 @@ function App() {
       
       targetClients.forEach(targetClient => {
         const pathB = clientPaths[targetClient][targetEnv];
-        allCommands.push(`\n# ========================================`);
-        allCommands.push(`# ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
-        allCommands.push(`# ========================================`);
+        allCommands.push(`\nREM ========================================`);
+        allCommands.push(`REM ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
+        allCommands.push(`REM ========================================`);
         
         files.forEach(file => {
           const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.sql$/i, ".diff")}`;
