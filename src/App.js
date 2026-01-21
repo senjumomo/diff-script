@@ -212,10 +212,11 @@ function App() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.nav}>
-        <button onClick={() => setShowCompare(false)} style={styles.navButton}>Home</button>
-        <button onClick={() => setShowCompare(true)} style={styles.navButton}>Compare Plans</button>
-      </div>
+      {!showCompare && (
+        <div style={styles.nav}>
+          <button onClick={() => setShowCompare(true)} style={styles.navButton}>Compare Plans</button>
+        </div>
+      )}
 
       {showCompare ? (
         <ComparePage onBack={() => setShowCompare(false)} />
