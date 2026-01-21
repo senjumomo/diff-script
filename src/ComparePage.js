@@ -75,7 +75,7 @@ export default function ComparePage({ onBack }) {
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 0 }}>
         <button onClick={compare} style={styles.compareButton}>Compare</button>
         <button onClick={clear} style={styles.clearButton}>Clear</button>
       </div>
@@ -118,7 +118,7 @@ const styles = {
     color: "#eee",
     display: "flex",
     flexDirection: "column",
-    gap: 12,
+    gap: 24,
     alignItems: "center",
   },
   headerRow: {
@@ -142,11 +142,14 @@ const styles = {
     justifyContent: "center",
   },
   inputBox: {
-    flex: 1,
+    flex: "0 0 48%",
     minWidth: 360,
+    backgroundColor: "#222639",
+    padding: 16,
+    borderRadius: 8,
   },
   textarea: {
-    width: "100%",
+    width: "calc(100% - 0px)",
     minHeight: 340,
     padding: 12,
     borderRadius: 8,
@@ -154,8 +157,9 @@ const styles = {
     backgroundColor: "#2c2c44",
     color: "#eee",
     resize: "vertical",
+    boxSizing: "border-box",
   },
-  label: { fontWeight: 600, marginBottom: 6, display: "block" },
+  label: { fontWeight: 600, marginBottom: 6, display: "block", color: "#eee" },
   compareButton: {
     padding: "0.5rem 0.9rem",
     borderRadius: 6,
