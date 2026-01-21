@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import ComparePage from "./ComparePage";
 
 
 // Client paths including Test and Regression clients with single environments
@@ -76,6 +77,7 @@ function App() {
   const [diffCommands, setDiffCommands] = useState("");
   const [diffAllQA, setDiffAllQA] = useState(false);
   const [diffAllProd, setDiffAllProd] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
 
   const extractFiles = (text) => {
     const matches = text.match(/\b[\w\-_]+\.sql\b/gi);
@@ -210,6 +212,15 @@ function App() {
 
   return (
     <div style={styles.container}>
+      <div style={styles.nav}>
+        <button onClick={() => setShowCompare(false)} style={styles.navButton}>Home</button>
+        <button onClick={() => setShowCompare(true)} style={styles.navButton}>Compare Plans</button>
+      </div>
+
+      {showCompare ? (
+        <ComparePage onBack={() => setShowCompare(false)} />
+      ) : (
+        <>
 
       {/* GitHub clickable text */}
       <a
@@ -336,6 +347,8 @@ function App() {
         style={styles.diffTextarea}
         spellCheck={false}
       />
+        </>
+      )}
     </div>
   );
 }
@@ -364,10 +377,26 @@ const styles = {
     fontWeight: "600",
     textAlign: "center",
   },
+  nav: {
+    width: "100%",
+    maxWidth: 900,
+    display: "flex",
+    gap: 8,
+    justifyContent: "flex-start",
+    marginBottom: 12,
+  },
+  navButton: {
+    padding: "0.35rem 0.6rem",
+    borderRadius: 6,
+    backgroundColor: "#3a3f5a",
+    border: "none",
+    color: "#fff",
+    cursor: "pointer",
+  },
   textarea: {
     width: "100%",
     maxWidth: "600px",
-    height: "150px",
+    height: "240px",
     padding: "0.75rem 1rem",
     fontSize: "1rem",
     borderRadius: "8px",
@@ -382,8 +411,8 @@ const styles = {
   diffTextarea: {
     width: "100%",
     maxWidth: "900px",
-    minHeight: "300px",
-    maxHeight: "600px",
+    minHeight: "420px",
+    maxHeight: "900px",
     padding: "0.75rem 1rem",
     fontSize: "1rem",
     borderRadius: "8px",
