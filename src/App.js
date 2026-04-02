@@ -41,6 +41,10 @@ const clientPaths = {
     QA: "Q:\\FML\\qa\\sql",
     LIVE: "Q:\\FML\\live\\sql",
   },
+  BONITAS: {
+    QA: "Q:\\Bonitas\\qa\\sql",
+    LIVE: "Q:\\Bonitas\\live\\sql",
+  },
   Test: {
     TEST: "Q:\\iThrive\\test\\sql",
   },
