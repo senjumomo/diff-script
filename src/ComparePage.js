@@ -1,5 +1,12 @@
 import React, { useState } from "react";
 
+function extractFileName(entry) {
+  // Extract the filename token (e.g. "s_queue_message_body.sql") from a line
+  // like "DRC(N): s_queue_message_body.sql HIP"
+  const match = entry.match(/\b(\S+\.\w+)\b/);
+  return match ? match[1] : entry;
+}
+
 function parseEntities(text) {
   if (!text) return [];
   // Split on newlines, commas, semicolons and trim; remove empties
@@ -10,15 +17,36 @@ function parseEntities(text) {
     .filter(Boolean)
     .filter((s) => !s.startsWith("--"));
   // Deduplicate and normalize
-  const set = new Set(parts.map((p) => p));
+  const set = new Set(parts);
   return Array.from(set);
 }
+
+function parseFileNames(text) {
+  if (!text) return [];
+  const parts = text
+    .split(/\r?\n|,|;/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !s.startsWith("--"))
+    .map(extractFileName);
+  const set = new Set(parts);
+  return Array.from(set);
+}
+
+
+const TABS = [
+  { id: "missingInA", label: "Plan 1 doesn't have" },
+  { id: "missingInB", label: "Plan 2 doesn't have" },
+  { id: "common", label: "Common Entities" },
+];
 
 export default function ComparePage({ onBack }) {
   const [planA, setPlanA] = useState("");
   const [planB, setPlanB] = useState("");
+  const [activeTab, setActiveTab] = useState("missingInA");
   const [onlyInA, setOnlyInA] = useState([]);
   const [onlyInB, setOnlyInB] = useState([]);
+  const [commonEntities, setCommonEntities] = useState([]);
 
   const compare = () => {
     const a = parseEntities(planA);
@@ -29,8 +57,13 @@ export default function ComparePage({ onBack }) {
     const aNotB = a.filter((x) => !setB.has(x));
     const bNotA = b.filter((x) => !setA.has(x));
 
+    const fileNamesA = parseFileNames(planA);
+    const fileNamesB = new Set(parseFileNames(planB));
+    const common = fileNamesA.filter((x) => fileNamesB.has(x));
+
     setOnlyInA(aNotB);
     setOnlyInB(bNotA);
+    setCommonEntities(common);
   };
 
   const copy = (arr) => {
@@ -44,6 +77,7 @@ export default function ComparePage({ onBack }) {
     setPlanB("");
     setOnlyInA([]);
     setOnlyInB([]);
+    setCommonEntities([]);
   };
 
   return (
@@ -80,31 +114,62 @@ export default function ComparePage({ onBack }) {
         <button onClick={clear} style={styles.clearButton}>Clear</button>
       </div>
 
-      <div style={styles.resultsRow}>
-        <div style={styles.resultBox}>
-          <h3>Plan 1 doesn't have (from Plan 2)</h3>
-          <div style={styles.resultList}>
-            {onlyInB.length === 0 ? <i style={{ opacity: 0.7 }}>No differences</i> : null}
-            {onlyInB.map((it) => (
-              <div key={it} style={styles.resultItem}>{it}</div>
-            ))}
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <button onClick={() => copy(onlyInB)} style={styles.smallButton}>Copy</button>
-          </div>
+      <div style={styles.tabsContainer}>
+        <div style={styles.tabBar}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                ...styles.tabButton,
+                ...(activeTab === tab.id ? styles.tabButtonActive : {}),
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div style={styles.resultBox}>
-          <h3>Plan 2 doesn't have (from Plan 1)</h3>
-          <div style={styles.resultList}>
-            {onlyInA.length === 0 ? <i style={{ opacity: 0.7 }}>No differences</i> : null}
-            {onlyInA.map((it) => (
-              <div key={it} style={styles.resultItem}>{it}</div>
-            ))}
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <button onClick={() => copy(onlyInA)} style={styles.smallButton}>Copy</button>
-          </div>
+        <div style={styles.tabPanel}>
+          {activeTab === "missingInA" && (
+            <>
+              <div style={styles.resultList}>
+                {onlyInB.length === 0 ? <i style={{ opacity: 0.7 }}>No differences</i> : null}
+                {onlyInB.map((it) => (
+                  <div key={it} style={styles.resultItem}>{it}</div>
+                ))}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => copy(onlyInB)} style={styles.smallButton}>Copy</button>
+              </div>
+            </>
+          )}
+          {activeTab === "missingInB" && (
+            <>
+              <div style={styles.resultList}>
+                {onlyInA.length === 0 ? <i style={{ opacity: 0.7 }}>No differences</i> : null}
+                {onlyInA.map((it) => (
+                  <div key={it} style={styles.resultItem}>{it}</div>
+                ))}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => copy(onlyInA)} style={styles.smallButton}>Copy</button>
+              </div>
+            </>
+          )}
+          {activeTab === "common" && (
+            <>
+              <div style={styles.resultList}>
+                {commonEntities.length === 0 ? <i style={{ opacity: 0.7 }}>No common entities</i> : null}
+                {commonEntities.map((it) => (
+                  <div key={it} style={styles.resultItem}>{it}</div>
+                ))}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => copy(commonEntities)} style={styles.smallButton}>Copy</button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -177,18 +242,33 @@ const styles = {
     color: "#fff",
     cursor: "pointer",
   },
-  resultsRow: {
-    display: "flex",
-    gap: 28,
+  tabsContainer: {
     width: "100%",
-    justifyContent: "center",
-  },
-  resultBox: {
-    flex: "0 0 48%",
-    minWidth: 360,
     backgroundColor: "#222639",
-    padding: 16,
     borderRadius: 8,
+    overflow: "hidden",
+  },
+  tabBar: {
+    display: "flex",
+    borderBottom: "2px solid #2c2c44",
+  },
+  tabButton: {
+    flex: 1,
+    padding: "0.6rem 1rem",
+    border: "none",
+    backgroundColor: "transparent",
+    color: "#aaa",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+  },
+  tabButtonActive: {
+    color: "#fff",
+    borderBottom: "2px solid #3a8bff",
+    backgroundColor: "#2c2c44",
+  },
+  tabPanel: {
+    padding: 16,
   },
   resultList: {
     marginTop: 8,
