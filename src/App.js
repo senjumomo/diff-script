@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import ComparePage from "./ComparePage";
+import ExistanceCheckPage from "./ExistanceCheckPage";
 
 
 // Client paths including Test and Regression clients with single environments
@@ -81,7 +82,7 @@ function App() {
   const [diffCommands, setDiffCommands] = useState("");
   const [diffAllQA, setDiffAllQA] = useState(false);
   const [diffAllProd, setDiffAllProd] = useState(false);
-  const [showCompare, setShowCompare] = useState(false);
+  const [page, setPage] = useState("home");
 
   const extractFiles = (text) => {
     const matches = text.match(/\b[\w\-_]+\.sql\b/gi);
@@ -216,14 +217,17 @@ function App() {
 
   return (
     <div style={styles.container}>
-      {!showCompare && (
+      {page === "home" && (
         <div style={styles.nav}>
-          <button onClick={() => setShowCompare(true)} style={styles.navButton}>Compare Plans</button>
+          <button onClick={() => setPage("compare")} style={styles.navButton}>Compare Plans</button>
+          <button onClick={() => setPage("existance")} style={styles.navButton}>Existance Check</button>
         </div>
       )}
 
-      {showCompare ? (
-        <ComparePage onBack={() => setShowCompare(false)} />
+      {page === "compare" ? (
+        <ComparePage onBack={() => setPage("home")} />
+      ) : page === "existance" ? (
+        <ExistanceCheckPage onBack={() => setPage("home")} />
       ) : (
         <>
 
