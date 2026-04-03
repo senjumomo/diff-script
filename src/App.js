@@ -228,20 +228,8 @@ function App() {
         <DeploymentEmailPage onBack={() => setPage("home")} />
       ) : (
         <>
-          {/* GitHub clickable text */}
-          <a
-            href="https://github.com/senjumomo"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.githubLink}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <FaGithub size={28} /> {/* adjust the size as you like */}
-              <div style={{ marginTop: '5px', fontSize: '14px' }}>My GitHub</div>
-            </div>
-          </a>
-            <h2 style={{ ...styles.heading, textAlign: "center", fontSize: "2rem", marginBottom: 8 }}>Diff Script</h2>
-            <h3 style={{ ...styles.heading, textAlign: "center", fontSize: "1.25rem", fontWeight: 600, marginBottom: 18 }}>Paste your deployment scripts here:</h3>
+          <h2 style={{ ...styles.heading, textAlign: "center", fontSize: "2rem", marginBottom: 8 }}>Diff Script</h2>
+          <h3 style={{ ...styles.heading, textAlign: "center", fontSize: "1.25rem", fontWeight: 600, marginBottom: 18 }}>Paste your deployment scripts here:</h3>
           <div style={styles.topContainer}>
             <textarea
               value={inputText}
@@ -250,6 +238,33 @@ function App() {
               style={styles.textarea}
             />
           </div>
+                {/* Floating GitHub icon bottom right */}
+                <a
+                  href="https://github.com/senjumomo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    position: 'fixed',
+                    right: 24,
+                    bottom: 24,
+                    zIndex: 5000,
+                    color: '#ff2fa0',
+                    background: '#23243a',
+                    borderRadius: '50%',
+                    width: 52,
+                    height: 52,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px #0008',
+                    fontSize: 32,
+                    textDecoration: 'none',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                  aria-label="My GitHub"
+                >
+                  <FaGithub />
+                </a>
           <div style={styles.optionsPaneContainer}>
             <div style={styles.optionsPane}>
               <h3 style={styles.optionsPaneTitle}>Options</h3>
