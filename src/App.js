@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import ComparePage from "./ComparePage";
 import ExistanceCheckPage from "./ExistanceCheckPage";
-
+import DeploymentEmailPage from "./DeploymentEmailPage";
 
 // Client paths including Test and Regression clients with single environments
 const clientPaths = {
@@ -221,6 +221,7 @@ function App() {
         <div style={styles.nav}>
           <button onClick={() => setPage("compare")} style={styles.navButton}>Compare Plans</button>
           <button onClick={() => setPage("existance")} style={styles.navButton}>Existance Check</button>
+          <button onClick={() => setPage("email")} style={styles.navButton}>Deployment Email</button>
         </div>
       )}
 
@@ -228,6 +229,8 @@ function App() {
         <ComparePage onBack={() => setPage("home")} />
       ) : page === "existance" ? (
         <ExistanceCheckPage onBack={() => setPage("home")} />
+      ) : page === "email" ? (
+        <DeploymentEmailPage onBack={() => setPage("home")} />
       ) : (
         <>
 
