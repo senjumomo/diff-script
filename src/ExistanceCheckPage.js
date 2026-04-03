@@ -204,6 +204,7 @@ const styles = {
     flexDirection: "column",
     gap: 20,
     alignItems: "center",
+    marginLeft: 220, // SideMenu width
   },
   headerRow: {
     width: "100%",
