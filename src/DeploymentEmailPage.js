@@ -141,8 +141,7 @@ Kind Regards,`;
   return (
     <div style={styles.container}>
       <div style={styles.headerRow}>
-        <button onClick={onBack} style={styles.backButton}>← Back</button>
-        <h2 style={{ margin: 0 }}>Deployment Email Builder</h2>
+        <h2 style={{ margin: 0, textAlign: "center", width: "100%" }}>Deployment Email Builder</h2>
       </div>
       <div style={styles.formRow}>
         <label style={styles.label}>Recipient Name:</label>

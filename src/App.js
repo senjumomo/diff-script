@@ -3,6 +3,7 @@ import { FaGithub } from "react-icons/fa";
 import ComparePage from "./ComparePage";
 import ExistanceCheckPage from "./ExistanceCheckPage";
 import DeploymentEmailPage from "./DeploymentEmailPage";
+import SideMenu from "./SideMenu";
 
 // Client paths including Test and Regression clients with single environments
 const clientPaths = {
@@ -125,10 +126,10 @@ function App() {
         allCommands.push(`\nREM ========================================`);
         allCommands.push(`REM ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
         allCommands.push(`REM ========================================`);
-        
         files.forEach(file => {
           const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.sql$/i, ".diff")}`;
-          allCommands.push(`diff -iwc "${pathA}\\${file}" "${pathB}\\${file}" > ${diffFile}`);
+          // For diff-all, put 'from' (source) file second
+          allCommands.push(`diff -iwc "${pathB}\\${file}" "${pathA}\\${file}" > ${diffFile}`);
         });
       });
 
@@ -140,7 +141,8 @@ function App() {
       if (pathB) {
         const diffs = files.map((file) => {
           const diffFile = file.replace(/\.sql$/i, ".diff");
-          return `diff -iwc "${pathA}\\${file}" "${pathB}\\${file}" > ${diffFile}`;
+          // Swap order: put 'to' (prod) file first, then 'from' (qa) file
+          return `diff -iwc "${pathB}\\${file}" "${pathA}\\${file}" > ${diffFile}`;
         });
         setDiffCommands(diffs.join("\n"));
       } else {
@@ -217,14 +219,7 @@ function App() {
 
   return (
     <div style={styles.container}>
-      {page === "home" && (
-        <div style={styles.nav}>
-          <button onClick={() => setPage("compare")} style={styles.navButton}>Compare Plans</button>
-          <button onClick={() => setPage("existance")} style={styles.navButton}>Existance Check</button>
-          <button onClick={() => setPage("email")} style={styles.navButton}>Deployment Email</button>
-        </div>
-      )}
-
+      <SideMenu currentPage={page} onNavigate={setPage} />
       {page === "compare" ? (
         <ComparePage onBack={() => setPage("home")} />
       ) : page === "existance" ? (
@@ -233,132 +228,128 @@ function App() {
         <DeploymentEmailPage onBack={() => setPage("home")} />
       ) : (
         <>
-
-      {/* GitHub clickable text */}
-      <a
-        href="https://github.com/senjumomo"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={styles.githubLink}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <FaGithub size={28} /> {/* adjust the size as you like */}
-          <div style={{ marginTop: '5px', fontSize: '14px' }}>My GitHub</div>
-        </div>
-      </a>
-
-      <h2 style={styles.heading}>Paste your deployment scripts here:</h2>
-      
-      <div style={styles.topContainer}>
-        <textarea
-          value={inputText}
-          onChange={onInputChange}
-          placeholder="Paste deployment script instructions here"
-          style={styles.textarea}
-        />
-      </div>
-
-      <div style={styles.optionsPaneContainer}>
-        <div style={styles.optionsPane}>
-          <h3 style={styles.optionsPaneTitle}>Options</h3>
-          
-          {/* Toggle for diff all QA clients */}
-          <div style={styles.toggleBox}>
-            <label style={styles.label}>
-              <input
-                type="checkbox"
-                checked={diffAllQA}
-                onChange={onDiffAllQAToggle}
-                style={styles.checkbox}
-              />
-              Diff against all QA environments
-            </label>
+          {/* GitHub clickable text */}
+          <a
+            href="https://github.com/senjumomo"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={styles.githubLink}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <FaGithub size={28} /> {/* adjust the size as you like */}
+              <div style={{ marginTop: '5px', fontSize: '14px' }}>My GitHub</div>
+            </div>
+          </a>
+            <h2 style={{ ...styles.heading, textAlign: "center", fontSize: "2rem", marginBottom: 8 }}>Diff Script</h2>
+            <h3 style={{ ...styles.heading, textAlign: "center", fontSize: "1.25rem", fontWeight: 600, marginBottom: 18 }}>Paste your deployment scripts here:</h3>
+          <div style={styles.topContainer}>
+            <textarea
+              value={inputText}
+              onChange={onInputChange}
+              placeholder="Paste deployment script instructions here"
+              style={styles.textarea}
+            />
           </div>
-
-          {/* Toggle for diff all LIVE clients */}
-          <div style={styles.toggleBox}>
-            <label style={styles.label}>
-              <input
-                type="checkbox"
-                checked={diffAllProd}
-                onChange={onDiffAllProdToggle}
-                style={styles.checkbox}
-              />
-              Diff against all LIVE environments
-            </label>
+          <div style={styles.optionsPaneContainer}>
+            <div style={styles.optionsPane}>
+              <h3 style={styles.optionsPaneTitle}>Options</h3>
+              {/* Toggle for diff all QA clients */}
+              <div style={styles.toggleBox}>
+                <label style={styles.label}>
+                  <input
+                    type="checkbox"
+                    checked={diffAllQA}
+                    onChange={onDiffAllQAToggle}
+                    style={styles.checkbox}
+                  />
+                  Diff against all QA environments
+                </label>
+              </div>
+              {/* Toggle for diff all LIVE clients */}
+              <div style={styles.toggleBox}>
+                <label style={styles.label}>
+                  <input
+                    type="checkbox"
+                    checked={diffAllProd}
+                    onChange={onDiffAllProdToggle}
+                    style={styles.checkbox}
+                  />
+                  Diff against all LIVE environments
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <h2 style={{ ...styles.heading, marginTop: "2rem" }}>
-        Extracted .sql filenames:
-      </h2>
-      <textarea
-        value={outputFiles}
-        readOnly
-        style={{ ...styles.textarea, backgroundColor: "#222639" }}
-      />
-
-      <div style={styles.dropdownContainer}>
-        <div style={styles.dropdownBox}>
-          <label style={styles.label}>Client A:</label>
-          <select value={clientA} onChange={onClientAChange} style={styles.select}>
-            {clients.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        {!isSingleEnvClient(clientA) && (
-          <div style={styles.dropdownBox}>
-            <label style={styles.label}>Environment A:</label>
-            <select value={envA} onChange={onEnvAChange} style={styles.select}>
-              {environments.map((e) => (
-                <option key={e} value={e}>{e}</option>
-              ))}
-            </select>
+          <h3 style={{ ...styles.heading, textAlign: "center", fontSize: "1.25rem", fontWeight: 600, marginTop: "2rem", marginBottom: 12 }}>
+            Extracted .sql filenames:
+          </h3>
+          <textarea
+            value={outputFiles}
+            readOnly
+            style={{ ...styles.textarea, backgroundColor: "#222639" }}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: diffAllQA || diffAllProd ? '1fr' : '1fr 1fr', columnGap: 64, rowGap: 18, alignItems: 'center', justifyContent: 'center', margin: '0 auto', maxWidth: 1000, minWidth: 600 }}>
+            {/* Row 1: Headers */}
+            <div style={{ fontWeight: 700, color: '#3a8bff', fontSize: 15, textAlign: 'center', marginBottom: 4 }}>Deploying from</div>
+            {!(diffAllQA || diffAllProd) && (
+              <div style={{ fontWeight: 700, color: '#28c76f', fontSize: 15, textAlign: 'center', marginBottom: 4 }}>Deploying to</div>
+            )}
+            {/* Row 2: Dropdowns in a row, space efficient */}
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+              <label style={styles.label}>Client A:</label>
+              <select value={clientA} onChange={onClientAChange} style={styles.select}>
+                {clients.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              {!isSingleEnvClient(clientA) && (
+                <>
+                  <label style={{ ...styles.label, marginLeft: 8 }}>Environment A:</label>
+                  <select value={envA} onChange={onEnvAChange} style={styles.select}>
+                    {environments.map((e) => (
+                      <option key={e} value={e}>{e}</option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
+            {!(diffAllQA || diffAllProd) && (
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                <label style={styles.label}>Client B:</label>
+                <select value={clientB} onChange={onClientBChange} style={styles.select}>
+                  {clients.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                {!isSingleEnvClient(clientB) && (
+                  <>
+                    <label style={{ ...styles.label, marginLeft: 8 }}>Environment B:</label>
+                    <select value={envB} onChange={onEnvBChange} style={styles.select}>
+                      {environments.map((e) => (
+                        <option key={e} value={e}>{e}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-        )}
-
-        <div style={styles.dropdownBox}>
-          <label style={styles.label}>Client B:</label>
-          <select value={clientB} onChange={onClientBChange} style={styles.select}>
-            {clients.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        {!isSingleEnvClient(clientB) && (
-          <div style={styles.dropdownBox}>
-            <label style={styles.label}>Environment B:</label>
-            <select value={envB} onChange={onEnvBChange} style={styles.select}>
-              {environments.map((e) => (
-                <option key={e} value={e}>{e}</option>
-              ))}
-            </select>
+          <div style={{ textAlign: "center", marginTop: "2rem" }}>
+            <h2 style={styles.heading}>Generated diff commands:</h2>
+            <div style={styles.buttonGroup}>
+              <button onClick={copyToClipboard} style={styles.copyButton}>
+                Copy
+              </button>
+              <button onClick={downloadBatFile} style={styles.downloadButton}>
+                Download .bat
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <h2 style={styles.heading}>Generated diff commands:</h2>
-        <div style={styles.buttonGroup}>
-          <button onClick={copyToClipboard} style={styles.copyButton}>
-            Copy
-          </button>
-          <button onClick={downloadBatFile} style={styles.downloadButton}>
-            Download .bat
-          </button>
-        </div>
-      </div>
-
-      <textarea
-        value={diffCommands}
-        readOnly
-        style={styles.diffTextarea}
-        spellCheck={false}
-      />
+          <textarea
+            value={diffCommands}
+            readOnly
+            style={styles.diffTextarea}
+            spellCheck={false}
+          />
         </>
       )}
     </div>

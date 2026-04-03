@@ -44,9 +44,9 @@ export default function ComparePage({ onBack }) {
   const [planA, setPlanA] = useState("");
   const [planB, setPlanB] = useState("");
   const [activeTab, setActiveTab] = useState("missingInA");
-  const [onlyInA, setOnlyInA] = useState([]);
-  const [onlyInB, setOnlyInB] = useState([]);
-  const [commonEntities, setCommonEntities] = useState([]);
+     const [onlyInA, setOnlyInA] = useState([]); 
+     const [onlyInB, setOnlyInB] = useState([]); 
+     const [commonEntities, setCommonEntities] = useState([]); 
 
   const compare = () => {
     const a = parseEntities(planA);
@@ -82,10 +82,9 @@ export default function ComparePage({ onBack }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.headerRow}>
-        <button onClick={onBack} style={styles.backButton}>← Back</button>
-        <h2 style={{ margin: 0 }}>Compare Deployment Plans</h2>
-      </div>
+          <div style={styles.headerRow}>
+            <h2 style={{ margin: 0, textAlign: "center", width: "100%" }}>Compare Deployment Plans</h2>
+          </div>
 
       <div style={styles.inputsRow}>
         <div style={styles.inputBox}>
