@@ -20,6 +20,7 @@ const menuItems = [
   { label: "Compare Plans", page: "compare", icon: icons.compare },
   { label: "Existence Check", page: "existance", icon: icons.existance },
   { label: "Deployment Email", page: "email", icon: icons.email },
+  { label: "Deployment Validation", page: "validation", icon: icons.compare },
 ];
 
 function SideMenu({ currentPage, onNavigate }) {

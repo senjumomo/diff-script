@@ -4,59 +4,13 @@ import ComparePage from "./ComparePage";
 import ExistanceCheckPage from "./ExistanceCheckPage";
 import DeploymentEmailPage from "./DeploymentEmailPage";
 import SideMenu from "./SideMenu";
+import DeploymentValidationPage from "./DeploymentValidationPage";
+import { clientPaths, clients, environments } from "./clients";
 
-// Client paths including Test and Regression clients with single environments
-const clientPaths = {
-  Bestmed: {
-    QA: "Q:\\BestMed\\qa\\sql",
-    LIVE: "Q:\\BestMed\\live",
-  },
-  Ship: {
-    QA: "Q:\\SHIP\\qa\\sql",
-    LIVE: "Q:\\SHIP\\live\\sql",
-  },
-  ZMG: {
-    QA: "Q:\\ZimGen\\qa\\sql",
-    LIVE: "Q:\\ZimGen\\live\\sql",
-  },
-  ZMZ: {
-    QA: "Q:\\ZSIC\\qa\\sql",
-    LIVE: "Q:\\ZSIC\\live\\sql",
-  },  
-  HMS: {
-    QA: "Q:\\Zimbabwe\\qa\\sql",
-    LIVE: "Q:\\Zimbabwe\\live\\sql",
-  },
-  ZMC: {
-    QA: "Q:\\CIMAS\\qa\\sql",
-    LIVE: "Q:\\CIMAS\\live\\sql",
-  },
-  HIP: {
-    QA: "Q:\\iThrive\\qa\\sql",
-    LIVE: "Q:\\iThrive\\live\\sql",
-  },
-  MMI: {
-    QA: "Q:\\MMI_Africa\\qa\\sql",
-    LIVE: "Q:\\MMI_Africa\\live\\sql",
-  },
-  FML: {
-    QA: "Q:\\FML\\qa\\sql",
-    LIVE: "Q:\\FML\\live\\sql",
-  },
-  BONITAS: {
-    QA: "Q:\\Bonitas\\qa\\sql",
-    LIVE: "Q:\\Bonitas\\live\\sql",
-  },
-  Test: {
-    TEST: "Q:\\iThrive\\test\\sql",
-  },
-  Regression: {
-    REGRESSION: "Q:\\SHIP\\qa\\regression\\deployed\\sql",
-  },
-};
+// Exclude the special 'ALL' pseudo-client from app-wide client lists
+const filteredClients = clients.filter(c => c !== 'ALL');
 
-const clients = Object.keys(clientPaths);
-const environments = ["QA", "LIVE"];
+// shared client paths, clients and environments are imported from ./clients
 
 const isSingleEnvClient = (client) =>
   client === "Test" || client === "Regression";
@@ -69,8 +23,8 @@ const getEnvForClient = (client) =>
     : "QA";
 
 function App() {
-  const initialClientA = clients[0];
-  const initialClientB = clients[1];
+  const initialClientA = filteredClients[0];
+  const initialClientB = filteredClients[1];
   const initialEnvA = getEnvForClient(initialClientA);
   const initialEnvB = getEnvForClient(initialClientB);
 
@@ -106,7 +60,7 @@ function App() {
       const targetEnv = diffAllQAMode ? "QA" : "LIVE";
       
       // Diff against all other clients in the target environment
-      const targetClients = clients.filter(c => {
+      const targetClients = filteredClients.filter(c => {
         // Exclude the source client
         if (c === clientAVal) return false;
         // Check if the target client has the target environment
@@ -226,6 +180,8 @@ function App() {
         <ExistanceCheckPage onBack={() => setPage("home")} />
       ) : page === "email" ? (
         <DeploymentEmailPage onBack={() => setPage("home")} />
+      ) : page === "validation" ? (
+        <DeploymentValidationPage />
       ) : (
         <>
           <h2 style={{ ...styles.heading, textAlign: "center", fontSize: "2rem", marginBottom: 8 }}>Diff Script</h2>
@@ -311,8 +267,8 @@ function App() {
             {/* Row 2: Dropdowns in a row, space efficient */}
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
               <label style={styles.label}>Client A:</label>
-              <select value={clientA} onChange={onClientAChange} style={styles.select}>
-                {clients.map((c) => (
+                <select value={clientA} onChange={onClientAChange} style={styles.select}>
+                {filteredClients.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -331,7 +287,7 @@ function App() {
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
                 <label style={styles.label}>Client B:</label>
                 <select value={clientB} onChange={onClientBChange} style={styles.select}>
-                  {clients.map((c) => (
+                  {filteredClients.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
