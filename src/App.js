@@ -40,8 +40,17 @@ function App() {
   const [page, setPage] = useState("home");
 
   const extractFiles = (text) => {
-    const matches = text.match(/\b[\w\-_]+\.sql\b/gi);
+    const matches = text.match(/\b[\w\-_]+\.(sql|apx)\b/gi);
     return matches || [];
+  };
+
+  // Helper to adjust path based on file extension
+  const getPathForFile = (basePath, fileName) => {
+    if (fileName.toLowerCase().endsWith('.apx')) {
+      // Replace \sql with \apex for apex files
+      return basePath.replace(/\\sql$/i, '\\apex');
+    }
+    return basePath;
   };
 
   const updateOutputs = (text, clientAVal, envAVal, clientBVal, envBVal, diffAllQAMode, diffAllProdMode) => {
@@ -76,27 +85,31 @@ function App() {
       let allCommands = [];
       
       targetClients.forEach(targetClient => {
-        const pathB = clientPaths[targetClient][targetEnv];
+        const basePathB = clientPaths[targetClient][targetEnv];
         allCommands.push(`\nREM ========================================`);
         allCommands.push(`REM ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
         allCommands.push(`REM ========================================`);
         files.forEach(file => {
-          const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.sql$/i, ".diff")}`;
+          const pathB = getPathForFile(basePathB, file);
+          const pathAForFile = getPathForFile(pathA, file);
+          const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.(sql|apx)$/i, ".diff")}`;
           // For diff-all, put 'from' (source) file second
-          allCommands.push(`diff -iwc "${pathB}\\${file}" "${pathA}\\${file}" > ${diffFile}`);
+          allCommands.push(`diff -iwc "${pathB}\\${file}" "${pathAForFile}\\${file}" > ${diffFile}`);
         });
       });
 
       setDiffCommands(allCommands.join("\n"));
     } else {
       // Original single diff logic
-      const pathB = clientPaths[clientBVal]?.[envBVal] || "";
+      const basePathB = clientPaths[clientBVal]?.[envBVal] || "";
       
-      if (pathB) {
+      if (basePathB) {
         const diffs = files.map((file) => {
-          const diffFile = file.replace(/\.sql$/i, ".diff");
+          const pathB = getPathForFile(basePathB, file);
+          const pathAForFile = getPathForFile(pathA, file);
+          const diffFile = file.replace(/\.(sql|apx)$/i, ".diff");
           // Swap order: put 'to' (prod) file first, then 'from' (qa) file
-          return `diff -iwc "${pathB}\\${file}" "${pathA}\\${file}" > ${diffFile}`;
+          return `diff -iwc "${pathB}\\${file}" "${pathAForFile}\\${file}" > ${diffFile}`;
         });
         setDiffCommands(diffs.join("\n"));
       } else {
@@ -251,7 +264,7 @@ function App() {
             </div>
           </div>
           <h3 style={{ ...styles.heading, textAlign: "center", fontSize: "1.25rem", fontWeight: 600, marginTop: "2rem", marginBottom: 12 }}>
-            Extracted .sql filenames:
+            Extracted .sql/.apx filenames:
           </h3>
           <textarea
             value={outputFiles}
