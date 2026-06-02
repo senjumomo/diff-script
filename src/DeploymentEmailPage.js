@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PageHeader from "./PageHeader";
 import { clientPaths } from "./clients";
 
 const clientEnvPrefixes = {
@@ -20,7 +21,7 @@ const emailTypeOptions = [
   { value: "prod",        label: "Deploy → PROD" },
 ];
 
-export default function DeploymentEmailPage({ onBack, showToast }) {
+export default function DeploymentEmailPage({ showToast }) {
   const [recipient, setRecipient]         = useState("");
   const [scriptName, setScriptName]       = useState("");
   const [scriptContents, setScriptContents] = useState("");
@@ -72,15 +73,13 @@ export default function DeploymentEmailPage({ onBack, showToast }) {
   };
 
   return (
-    <div className="fade-up" style={{ maxWidth: 820, margin: "0 auto" }}>
+    <div className="page">
 
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 className="ds-section-title">Deployment Email</h1>
-        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
-          Build standardised deployment emails instantly — fill in the fields and copy.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Comms"
+        title="Deployment Email"
+        description="Build standardised deployment emails — fill in the fields and copy."
+      />
 
       {/* Form Card */}
       <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1rem" }}>
@@ -121,9 +120,10 @@ export default function DeploymentEmailPage({ onBack, showToast }) {
         </div>
 
         {emailType !== "approval" && emailType !== "approvalprod" && (
-          <label className="ds-checkbox-row" style={{ marginBottom: "1rem" }}>
+          <label className="toggle-row" style={{ marginBottom: "1rem" }}>
             <input type="checkbox" checked={deployOnly} onChange={e => setDeployOnly(e.target.checked)} />
-            <span style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>Deploy script <strong style={{ color: "var(--primary-light)" }}>ONLY</strong> (do not run)</span>
+            <span className="toggle-track" />
+            <span className="toggle-label">Deploy script <strong>ONLY</strong> (do not run)</span>
           </label>
         )}
 
@@ -132,9 +132,9 @@ export default function DeploymentEmailPage({ onBack, showToast }) {
           <textarea
             value={scriptContents}
             onChange={e => setScriptContents(e.target.value)}
-            className="ds-textarea"
+            className="ds-textarea ds-textarea--mono"
             placeholder={"--Regression Version\nD(S): s_online_member_body.sql MAL"}
-            style={{ minHeight: 120, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem" }}
+            style={{ minHeight: 120 }}
           />
         </div>
       </div>
@@ -147,19 +147,20 @@ export default function DeploymentEmailPage({ onBack, showToast }) {
             Copy Email
           </button>
         </div>
-        <textarea
-          value={getBody()}
-          readOnly
-          className="ds-textarea"
-          style={{
-            minHeight: 420,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "0.82rem",
-            background: "rgba(0,0,0,0.25)",
-            lineHeight: 1.75,
-            resize: "vertical",
-          }}
-        />
+        <div className="terminal">
+          <div className="terminal__chrome">
+            <span className="terminal__dot terminal__dot--violet" />
+            <span className="terminal__dot terminal__dot--cyan" />
+            <span className="terminal__dot terminal__dot--rose" />
+            <span className="terminal__title">email_preview.txt</span>
+          </div>
+          <textarea
+            value={getBody()}
+            readOnly
+            className="terminal__body terminal__body--readonly"
+            style={{ minHeight: 420, resize: "vertical" }}
+          />
+        </div>
       </div>
     </div>
   );

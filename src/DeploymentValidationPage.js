@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PageHeader from './PageHeader';
 import { clients } from './clients';
 
 const clientIndicatorMap = {
@@ -66,24 +67,18 @@ function DeploymentValidationPage({ showToast }) {
   }
 
   return (
-    <div className="fade-up" style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div className="page">
 
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 className="ds-section-title">Deployment Validation</h1>
-        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
-          Validates client indicators and MAL parameters in your deployment plan.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Quality"
+        title="Deployment Validation"
+        description="Validates client indicators and MAL parameters in your deployment plan."
+      />
 
-      {/* Info banner */}
-      <div className="glass-card" style={{ padding: "1rem 1.25rem", marginBottom: "1rem", display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <span style={{ fontSize: "1.1rem", marginTop: 1 }}>🔍</span>
-        <div style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-          <strong style={{ color: "var(--text-primary)" }}>What this checks:</strong>
-          {" "}Deployment indicator <code style={{ background: "rgba(255,255,255,0.07)", padding: "1px 6px", borderRadius: 4, fontSize: "0.82rem" }}>(X)</code> matches the selected client,
-          and package files include the <code style={{ background: "rgba(255,255,255,0.07)", padding: "1px 6px", borderRadius: 4, fontSize: "0.82rem" }}>MAL</code> parameter.
-        </div>
+      <div className="panel info-banner">
+        <strong>What this checks:</strong>
+        {" "}Deployment indicator <code>(X)</code> matches the selected client,
+        and package files include the <code>MAL</code> parameter.
       </div>
 
       {/* Controls row */}
@@ -96,7 +91,7 @@ function DeploymentValidationPage({ showToast }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)" }}>Expected indicator</span>
-          <span className="ds-badge ds-badge-primary" style={{ fontSize: "0.85rem", fontFamily: "'JetBrains Mono', monospace", padding: "4px 12px" }}>
+          <span className="ds-badge ds-badge-primary mono" style={{ fontSize: "0.85rem", padding: "4px 12px" }}>
             {expectedIndicator || "—"}
           </span>
         </div>
@@ -112,8 +107,8 @@ function DeploymentValidationPage({ showToast }) {
           value={planText}
           onChange={e => setPlanText(e.target.value)}
           placeholder="Paste deployment plan here…"
-          className="ds-textarea"
-          style={{ minHeight: 220, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
+          className="ds-textarea ds-textarea--mono"
+          style={{ minHeight: 220 }}
         />
       </div>
 
@@ -121,8 +116,8 @@ function DeploymentValidationPage({ showToast }) {
       {issues !== null && (
         <div className="glass-card fade-up" style={{ padding: "1.5rem" }}>
           {issues.length === 0 ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#34d399", fontWeight: 600 }}>
-              <span style={{ fontSize: "1.2rem" }}>✓</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--success)", fontWeight: 600 }}>
+              <span className="mono">OK</span>
               No issues found — plan looks good!
             </div>
           ) : (

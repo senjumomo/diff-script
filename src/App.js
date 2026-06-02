@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
-import { FaGithub } from "react-icons/fa";
+import React, { useState, useCallback, useMemo } from "react";
 import ComparePage from "./ComparePage";
 import ExistenceCheckPage from "./ExistenceCheckPage";
 import DeploymentEmailPage from "./DeploymentEmailPage";
 import SideMenu from "./SideMenu";
+import PageHeader from "./PageHeader";
 import DeploymentValidationPage from "./DeploymentValidationPage";
 import { clientPaths, clients, environments } from "./clients";
 
@@ -24,11 +24,12 @@ const getEnvForClient = (client) =>
 let _toastId = 0;
 
 function ToastContainer({ toasts, onRemove }) {
+  const iconLabel = (type) => (type === "success" ? "OK" : type === "error" ? "!" : "i");
   return (
     <div className="toast-container">
       {toasts.map(t => (
         <div key={t.id} className={`toast toast-${t.type}`} onClick={() => onRemove(t.id)} style={{ cursor: "pointer" }}>
-          <span className="toast-icon">{t.type === "success" ? "✓" : t.type === "error" ? "✕" : "ℹ"}</span>
+          <span className="toast-icon">{iconLabel(t.type)}</span>
           {t.message}
         </div>
       ))}
@@ -186,201 +187,178 @@ function App() {
     showToast("Batch file downloaded!", "success");
   };
 
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", position: "relative" }}>
-      {/* Animated mesh background */}
-      <div className="mesh-bg">
-        <div className="mesh-blob mesh-blob-1" />
-        <div className="mesh-blob mesh-blob-2" />
-        <div className="mesh-blob mesh-blob-3" />
-      </div>
+  const fileCount = useMemo(
+    () => (outputFiles ? outputFiles.split("\n").filter(Boolean).length : 0),
+    [outputFiles]
+  );
+  const commandCount = useMemo(
+    () => (diffCommands ? diffCommands.split("\n").filter(l => l.trim().startsWith("diff ")).length : 0),
+    [diffCommands]
+  );
 
-      {/* Layout */}
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <SideMenu currentPage={page} onNavigate={setPage} />
+  const routeLabel = diffAllQA
+    ? `${clientA} → All QA`
+    : diffAllProd
+    ? `${clientA} → All LIVE`
+    : `${clientA} (${envA}) → ${clientB} (${envB})`;
 
-        <div style={{ marginLeft: 232, padding: "2.5rem 2rem 4rem", minHeight: "100vh" }}>
-          {page === "compare" ? (
-            <ComparePage showToast={showToast} onBack={() => setPage("home")} />
-          ) : page === "existence" ? (
-            <ExistenceCheckPage showToast={showToast} onBack={() => setPage("home")} />
-          ) : page === "email" ? (
-            <DeploymentEmailPage showToast={showToast} onBack={() => setPage("home")} />
-          ) : page === "validation" ? (
-            <DeploymentValidationPage showToast={showToast} />
-          ) : (
-            <div className="fade-up" style={{ maxWidth: 860, margin: "0 auto" }}>
-
-              {/* Page Header */}
-              <div style={{ marginBottom: "2rem" }}>
-                <h1 className="ds-section-title">Diff Script</h1>
-                <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
-                  Paste your deployment plan to auto-generate diff commands.
-                </p>
-              </div>
-
-              {/* Input Card */}
-              <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-                <label className="ds-label">Deployment Plan</label>
-                <textarea
-                  value={inputText}
-                  onChange={onInputChange}
-                  placeholder="Paste deployment script instructions here…"
-                  className="ds-textarea"
-                  style={{ minHeight: 180, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem", resize: "vertical" }}
-                />
-              </div>
-
-              {/* Options + Client config grid */}
-              <div style={{ display: "grid", gridTemplateColumns: diffAllQA || diffAllProd ? "1fr" : "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-
-                {/* Deploying From */}
-                <div className="glass-card" style={{ padding: "1.25rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "1rem" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#818cf8" }}>⬆ Deploying From</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, minWidth: 120 }}>
-                      <label className="ds-label">Client A</label>
-                      <select value={clientA} onChange={onClientAChange} className="ds-select">
-                        {filteredClients.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    {!isSingleEnvClient(clientA) && (
-                      <div style={{ flex: 1, minWidth: 120 }}>
-                        <label className="ds-label">Environment A</label>
-                        <select value={envA} onChange={onEnvAChange} className="ds-select">
-                          {environments.map(e => <option key={e} value={e}>{e}</option>)}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Deploying To */}
-                {!(diffAllQA || diffAllProd) && (
-                  <div className="glass-card" style={{ padding: "1.25rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "1rem" }}>
-                      <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#34d399" }}>⬇ Deploying To</span>
-                    </div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <div style={{ flex: 1, minWidth: 120 }}>
-                        <label className="ds-label">Client B</label>
-                        <select value={clientB} onChange={onClientBChange} className="ds-select">
-                          {filteredClients.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      {!isSingleEnvClient(clientB) && (
-                        <div style={{ flex: 1, minWidth: 120 }}>
-                          <label className="ds-label">Environment B</label>
-                          <select value={envB} onChange={onEnvBChange} className="ds-select">
-                            {environments.map(e => <option key={e} value={e}>{e}</option>)}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Toggles */}
-              <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "1.5rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-                <label className="ds-checkbox-row">
-                  <input type="checkbox" checked={diffAllQA} onChange={onDiffAllQAToggle} />
-                  <span style={{ fontSize: "0.9rem", color: "var(--text-muted)", fontWeight: 500 }}>
-                    Diff against <strong style={{ color: "#818cf8" }}>all QA</strong> environments
-                  </span>
-                </label>
-                <label className="ds-checkbox-row">
-                  <input type="checkbox" checked={diffAllProd} onChange={onDiffAllProdToggle} />
-                  <span style={{ fontSize: "0.9rem", color: "var(--text-muted)", fontWeight: 500 }}>
-                    Diff against <strong style={{ color: "#818cf8" }}>all LIVE</strong> environments
-                  </span>
-                </label>
-              </div>
-
-              {/* Extracted Files */}
-              {outputFiles && (
-                <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
-                  <label className="ds-label">Extracted .sql / .apx files</label>
-                  <textarea
-                    value={outputFiles}
-                    readOnly
-                    className="ds-textarea"
-                    style={{ minHeight: 80, background: "rgba(255,255,255,0.02)", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem", resize: "vertical" }}
-                  />
-                </div>
-              )}
-
-              {/* Generated Commands */}
-              <div className="glass-card" style={{ padding: "1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: 10 }}>
-                  <label className="ds-label" style={{ margin: 0 }}>Generated Diff Commands</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={copyToClipboard} className="ds-btn ds-btn-primary" disabled={!diffCommands.trim()}>
-                      Copy
-                    </button>
-                    <button onClick={downloadBatFile} className="ds-btn ds-btn-success" disabled={!diffCommands.trim()}>
-                      Download .bat
-                    </button>
-                  </div>
-                </div>
-                <textarea
-                  value={diffCommands}
-                  readOnly
-                  className="ds-textarea"
-                  style={{
-                    minHeight: 280,
-                    maxHeight: 500,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "0.8rem",
-                    resize: "vertical",
-                    whiteSpace: "nowrap",
-                    overflowX: "auto",
-                    background: "rgba(0,0,0,0.25)",
-                    lineHeight: 1.7,
-                  }}
-                  spellCheck={false}
-                />
-              </div>
+  const renderClientPanel = (tag, tagClass, clientVal, onClientChange, envVal, onEnvChange) => (
+    <div className="glow-card">
+      <div className="glow-card__inner">
+        <span className={`panel-tag panel-tag--${tagClass}`} style={{ marginBottom: 12, display: "inline-block" }}>
+          {tag}
+        </span>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 110 }}>
+            <label className="ds-label">Client</label>
+            <select value={clientVal} onChange={onClientChange} className="ds-select">
+              {filteredClients.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          {!isSingleEnvClient(clientVal) && (
+            <div style={{ flex: 1, minWidth: 110 }}>
+              <label className="ds-label">Environment</label>
+              <select value={envVal} onChange={onEnvChange} className="ds-select">
+                {environments.map(e => <option key={e} value={e}>{e}</option>)}
+              </select>
             </div>
           )}
         </div>
       </div>
-
-      {/* Floating GitHub */}
-      <a
-        href="https://github.com/senjumomo"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="github-pulse-btn"
-        style={{
-          position: 'fixed',
-          right: 24,
-          bottom: 24,
-          zIndex: 5000,
-          color: '#ff2fa0',
-          background: 'rgba(35,36,58,0.9)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: '50%',
-          width: 52,
-          height: 52,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 28,
-          textDecoration: 'none',
-          border: '1px solid rgba(255,47,160,0.3)',
-          transition: 'background 0.2s, color 0.2s',
-        }}
-        aria-label="My GitHub"
-      >
-        <FaGithub />
-      </a>
-
-      {/* Toast container */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
+  );
+
+  return (
+    <>
+      <div className="app-bg" aria-hidden="true">
+        <div className="aurora aurora-1" />
+        <div className="aurora aurora-2" />
+        <div className="aurora aurora-3" />
+        <div className="grain" />
+      </div>
+      <div className="app-shell">
+        <SideMenu currentPage={page} onNavigate={setPage} />
+        <main className="app-main">
+          {page === "compare" ? (
+            <ComparePage showToast={showToast} />
+          ) : page === "existence" ? (
+            <ExistenceCheckPage showToast={showToast} />
+          ) : page === "email" ? (
+            <DeploymentEmailPage showToast={showToast} />
+          ) : page === "validation" ? (
+            <DeploymentValidationPage showToast={showToast} />
+          ) : (
+            <div className="page page--home">
+              <div className="page-top">
+                <PageHeader
+                  eyebrow="Generator"
+                  title="Diff Script"
+                  description="Paste your deployment plan — files and batch diff commands generate live."
+                />
+                <div className="metric-strip">
+                  <div className="metric-card">
+                    <span className="metric-card__value">{fileCount || "—"}</span>
+                    <span className="metric-card__label">Files</span>
+                  </div>
+                  <div className="metric-card">
+                    <span className="metric-card__value">{commandCount || "—"}</span>
+                    <span className="metric-card__label">Commands</span>
+                  </div>
+                  <div className="metric-card" style={{ minWidth: 140, textAlign: "left" }}>
+                    <span className="metric-card__value metric-card__value--text mono">{routeLabel}</span>
+                    <span className="metric-card__label">Route</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bento">
+                <section className="bento__plan glow-card">
+                  <div className="glow-card__inner" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                    <label className="ds-label">Deployment plan</label>
+                    <textarea
+                      value={inputText}
+                      onChange={onInputChange}
+                      placeholder="Paste deployment script instructions here…"
+                      className="ds-textarea ds-textarea--mono"
+                      style={{ flex: 1, minHeight: 220 }}
+                    />
+                  </div>
+                </section>
+
+                <aside className="bento__config flow-grid">
+                  {renderClientPanel("Source", "from", clientA, onClientAChange, envA, onEnvAChange)}
+                  {!(diffAllQA || diffAllProd) && (
+                    <>
+                      <div className="flow-arrow" aria-hidden="true">→</div>
+                      {renderClientPanel("Target", "to", clientB, onClientBChange, envB, onEnvBChange)}
+                    </>
+                  )}
+                  <div className="glow-card">
+                    <div className="glow-card__inner" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <label className="toggle-row">
+                        <input type="checkbox" checked={diffAllQA} onChange={onDiffAllQAToggle} />
+                        <span className="toggle-track" />
+                        <span className="toggle-label">Diff <strong>all QA</strong></span>
+                      </label>
+                      <label className="toggle-row">
+                        <input type="checkbox" checked={diffAllProd} onChange={onDiffAllProdToggle} />
+                        <span className="toggle-track" />
+                        <span className="toggle-label">Diff <strong>all LIVE</strong></span>
+                      </label>
+                    </div>
+                  </div>
+                </aside>
+
+                {outputFiles && (
+                  <div className="bento__output glow-card">
+                    <div className="glow-card__inner">
+                      <div className="panel-header">
+                        <label className="ds-label" style={{ margin: 0 }}>Extracted files</label>
+                        <span className="stat-chip stat-chip--accent">{fileCount} detected</span>
+                      </div>
+                      <textarea value={outputFiles} readOnly className="ds-textarea ds-textarea--mono" style={{ minHeight: 64 }} />
+                    </div>
+                  </div>
+                )}
+
+                <section className="bento__output glow-card">
+                  <div className="glow-card__inner">
+                    <div className="panel-header">
+                      <label className="ds-label" style={{ margin: 0 }}>Generated output</label>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={copyToClipboard} className="ds-btn ds-btn-primary" disabled={!diffCommands.trim()}>
+                          Copy
+                        </button>
+                        <button type="button" onClick={downloadBatFile} className="ds-btn ds-btn-success" disabled={!diffCommands.trim()}>
+                          Download .bat
+                        </button>
+                      </div>
+                    </div>
+                    <div className="terminal">
+                      <div className="terminal__chrome">
+                        <span className="terminal__dot terminal__dot--violet" />
+                        <span className="terminal__dot terminal__dot--cyan" />
+                        <span className="terminal__dot terminal__dot--rose" />
+                        <span className="terminal__title">diff_commands.bat</span>
+                      </div>
+                      <textarea
+                        value={diffCommands}
+                        readOnly
+                        className="terminal__body terminal__body--readonly terminal__body--scroll-x"
+                        style={{ minHeight: 240, maxHeight: 420 }}
+                        spellCheck={false}
+                        placeholder="Commands appear here after you paste a plan…"
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </>
   );
 }
 

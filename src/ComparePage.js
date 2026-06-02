@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PageHeader from "./PageHeader";
 
 function extractFileName(entry) {
   const match = entry.match(/\b(\S+\.\w+)\b/);
@@ -32,7 +33,7 @@ const TABS = [
   { id: "common",     label: "Common" },
 ];
 
-export default function ComparePage({ onBack, showToast }) {
+export default function ComparePage({ showToast }) {
   const [planA, setPlanA]               = useState("");
   const [planB, setPlanB]               = useState("");
   const [activeTab, setActiveTab]       = useState("missingInA");
@@ -68,15 +69,13 @@ export default function ComparePage({ onBack, showToast }) {
   const activeData = activeTab === "missingInA" ? onlyInB : activeTab === "missingInB" ? onlyInA : commonEntities;
 
   return (
-    <div className="fade-up" style={{ maxWidth: 1060, margin: "0 auto" }}>
+    <div className="page page--wide">
 
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 className="ds-section-title">Compare Plans</h1>
-        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
-          Paste two deployment plans to find differences and common entities.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Analysis"
+        title="Compare Plans"
+        description="Paste two deployment plans to find differences and common entities."
+      />
 
       {/* Input cards side by side */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
@@ -84,14 +83,14 @@ export default function ComparePage({ onBack, showToast }) {
           { label: "Plan 1", value: planA, onChange: e => setPlanA(e.target.value), placeholder: "Paste Plan 1 here…" },
           { label: "Plan 2", value: planB, onChange: e => setPlanB(e.target.value), placeholder: "Paste Plan 2 here…" },
         ].map(({ label, value, onChange, placeholder }) => (
-          <div key={label} className="glass-card" style={{ padding: "1.25rem" }}>
+          <div key={label} className="glow-card" style={{ padding: "1.25rem" }}>
             <label className="ds-label">{label}</label>
             <textarea
               value={value}
               onChange={onChange}
               placeholder={placeholder}
-              className="ds-textarea"
-              style={{ minHeight: 280, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem", resize: "vertical" }}
+              className="ds-textarea ds-textarea--mono"
+              style={{ minHeight: 280, resize: "vertical" }}
             />
           </div>
         ))}
@@ -99,8 +98,8 @@ export default function ComparePage({ onBack, showToast }) {
 
       {/* Actions */}
       <div style={{ display: "flex", gap: 8, marginBottom: "1.5rem" }}>
-        <button onClick={compare} className="ds-btn ds-btn-primary">
-          ⚡ Compare
+        <button type="button" onClick={compare} className="ds-btn ds-btn-primary">
+          Compare
         </button>
         <button onClick={clear} className="ds-btn ds-btn-ghost">
           Clear
@@ -109,7 +108,7 @@ export default function ComparePage({ onBack, showToast }) {
 
       {/* Results */}
       {compared && (
-        <div className="glass-card fade-up" style={{ padding: "1.5rem" }}>
+        <div className="glow-card fade-up" style={{ padding: "1.5rem" }}>
           {/* Tab pills */}
           <div className="tab-pills" style={{ marginBottom: "1.25rem" }}>
             {TABS.map(tab => {
@@ -143,7 +142,7 @@ export default function ComparePage({ onBack, showToast }) {
               </div>
             ) : (
               activeData.map(it => (
-                <div key={it} className="result-item" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem" }}>
+                <div key={it} className="result-item mono" style={{ fontSize: "0.82rem" }}>
                   {it}
                 </div>
               ))

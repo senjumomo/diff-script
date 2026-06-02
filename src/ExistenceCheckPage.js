@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import PageHeader from "./PageHeader";
 import { clientPaths, clients, environments } from "./clients";
 
 const isSingleEnvClient = (client) => client === "Test" || client === "Regression";
 const getEnvForClient   = (client) =>
   client === "Test" ? "TEST" : client === "Regression" ? "REGRESSION" : "QA";
 
-export default function ExistenceCheckPage({ onBack, showToast }) {
+export default function ExistenceCheckPage({ showToast }) {
   const initialClient = clients[0];
   const [inputText, setInputText]   = useState("");
   const [outputFiles, setOutputFiles] = useState("");
@@ -64,15 +65,13 @@ export default function ExistenceCheckPage({ onBack, showToast }) {
   };
 
   return (
-    <div className="fade-up" style={{ maxWidth: 820, margin: "0 auto" }}>
+    <div className="page">
 
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 className="ds-section-title">Existence Check</h1>
-        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
-          Generate a batch script to check if deployment files exist on a client environment.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Verification"
+        title="Existence Check"
+        description="Generate a batch script to verify deployment files exist on a client environment."
+      />
 
       {/* Deployment Plan Input */}
       <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1rem" }}>
@@ -81,8 +80,8 @@ export default function ExistenceCheckPage({ onBack, showToast }) {
           value={inputText}
           onChange={onInputChange}
           placeholder="Paste deployment script instructions here…"
-          className="ds-textarea"
-          style={{ minHeight: 160, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}
+          className="ds-textarea ds-textarea--mono"
+          style={{ minHeight: 160 }}
         />
       </div>
 
@@ -111,8 +110,8 @@ export default function ExistenceCheckPage({ onBack, showToast }) {
           <textarea
             value={outputFiles}
             readOnly
-            className="ds-textarea"
-            style={{ minHeight: 80, background: "rgba(255,255,255,0.02)", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem", resize: "vertical" }}
+            className="ds-textarea ds-textarea--mono"
+            style={{ minHeight: 80, resize: "vertical" }}
           />
         </div>
       )}
@@ -130,21 +129,21 @@ export default function ExistenceCheckPage({ onBack, showToast }) {
             </button>
           </div>
         </div>
-        <textarea
-          value={batCommands}
-          readOnly
-          className="ds-textarea"
-          style={{
-            minHeight: 200,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "0.8rem",
-            whiteSpace: "nowrap",
-            overflowX: "auto",
-            background: "rgba(0,0,0,0.25)",
-            lineHeight: 1.7,
-          }}
-          spellCheck={false}
-        />
+        <div className="terminal">
+          <div className="terminal__chrome">
+            <span className="terminal__dot terminal__dot--violet" />
+            <span className="terminal__dot terminal__dot--cyan" />
+            <span className="terminal__dot terminal__dot--rose" />
+            <span className="terminal__title">existence_check.bat</span>
+          </div>
+          <textarea
+            value={batCommands}
+            readOnly
+            className="terminal__body terminal__body--readonly terminal__body--scroll-x"
+            style={{ minHeight: 200 }}
+            spellCheck={false}
+          />
+        </div>
       </div>
     </div>
   );
