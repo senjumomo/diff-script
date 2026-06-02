@@ -64,7 +64,7 @@ function SideMenu({ currentPage, onNavigate }) {
       </nav>
 
       <div className="nav-rail__footer">
-        <span className="nav-rail__version">v2 · prism</span>
+        <span className="nav-rail__version">v2.1</span>
         <a
           href="https://github.com/senjumomo/diff-script"
           target="_blank"

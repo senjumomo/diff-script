@@ -233,7 +233,6 @@ function App() {
       <div className="app-bg" aria-hidden="true">
         <div className="aurora aurora-1" />
         <div className="aurora aurora-2" />
-        <div className="aurora aurora-3" />
         <div className="grain" />
       </div>
       <div className="app-shell">
