@@ -1,263 +1,166 @@
 import React, { useState } from "react";
+import { clientPaths } from "./clients";
 
-
-// Map client name to environment prefix for email (special cases for BONITAS → BHIP, etc)
 const clientEnvPrefixes = {
-  BONITAS: "BHIP",
-  HIP: "HIP",
-  HMS: "HMS",
-  ZMC: "ZMC",
-  ZMG: "ZMG",
-  ZMZ: "ZMZ",
-  Ship: "SHIP",
-  Bestmed: "BIT",
-  MMI: "MMI",
-  FML: "FML",
+  BONITAS: "BHIP", HIP: "HIP", HMS: "HMS", ZMC: "ZMC", ZMG: "ZMG",
+  ZMZ: "ZMZ", Ship: "SHIP", Bestmed: "BIT", MMI: "MMI", FML: "FML",
 };
 
-// Import clientPaths from App.js (copy-paste, since no module system)
-const clientPaths = {
-  Bestmed: {
-    QA: "Q:\\BestMed\\qa\\sql",
-    LIVE: "Q:\\BestMed\\live",
-  },
-  Ship: {
-    QA: "Q:\\SHIP\\qa\\sql",
-    LIVE: "Q:\\SHIP\\live\\sql",
-  },
-  ZMG: {
-    QA: "Q:\\ZimGen\\qa\\sql",
-    LIVE: "Q:\\ZimGen\\live\\sql",
-  },
-  ZMZ: {
-    QA: "Q:\\ZSIC\\qa\\sql",
-    LIVE: "Q:\\ZSIC\\live\\sql",
-  },  
-  HMS: {
-    QA: "Q:\\Zimbabwe\\qa\\sql",
-    LIVE: "Q:\\Zimbabwe\\live\\sql",
-  },
-  ZMC: {
-    QA: "Q:\\CIMAS\\qa\\sql",
-    LIVE: "Q:\\CIMAS\\live\\sql",
-  },
-  HIP: {
-    QA: "Q:\\iThrive\\qa\\sql",
-    LIVE: "Q:\\iThrive\\live\\sql",
-  },
-  MMI: {
-    QA: "Q:\\MMI_Africa\\qa\\sql",
-    LIVE: "Q:\\MMI_Africa\\live\\sql",
-  },
-  FML: {
-    QA: "Q:\\FML\\qa\\sql",
-    LIVE: "Q:\\FML\\live\\sql",
-  },
-  BONITAS: {
-    QA: "Q:\\Bonitas\\qa\\sql",
-    LIVE: "Q:\\Bonitas\\live\\sql",
-  },
-  Test: {
-    TEST: "Q:\\iThrive\\test\\sql",
-  },
-  Regression: {
-    REGRESSION: "Q:\\SHIP\\qa\\regression\\deployed\\sql",
-  },
-};
+const selectableClients = Object.keys(clientPaths).filter(
+  c => c !== "Test" && c !== "Regression" && c !== "ALL"
+);
 
-// Build environment options like ZMCQA, ZMCPROD, BHIPQA, BHIPPROD, etc.
-const selectableClients = Object.keys(clientPaths).filter((client) => client !== "Test" && client !== "Regression");
+const envMap = { approval: "QA", approvalprod: "PROD", uat: "UAT", qa: "QA", prod: "PROD" };
 
-const envMap = {
-  approval: "QA",
-  approvalprod: "PROD",
-  uat: "UAT",
-  qa: "QA",
-  prod: "PROD"
-};
+const emailTypeOptions = [
+  { value: "approval",    label: "Approval (to QA)" },
+  { value: "approvalprod",label: "Approval (to PROD)" },
+  { value: "uat",         label: "Deploy → UAT" },
+  { value: "qa",          label: "Deploy → QA" },
+  { value: "prod",        label: "Deploy → PROD" },
+];
 
-export default function DeploymentEmailPage({ onBack }) {
-
-  const [recipient, setRecipient] = useState("");
-  const [scriptName, setScriptName] = useState("");
+export default function DeploymentEmailPage({ onBack, showToast }) {
+  const [recipient, setRecipient]         = useState("");
+  const [scriptName, setScriptName]       = useState("");
   const [scriptContents, setScriptContents] = useState("");
-  const [client, setClient] = useState(selectableClients[0]);
-  const [deployOnly, setDeployOnly] = useState(false);
-  const [emailType, setEmailType] = useState("approval"); // approval, uat, qa
+  const [client, setClient]               = useState(selectableClients[0]);
+  const [deployOnly, setDeployOnly]       = useState(false);
+  const [emailType, setEmailType]         = useState("approval");
 
-  // Clear deployOnly if switching to approval or approvalprod
   const handleEmailTypeChange = (e) => {
     const newType = e.target.value;
     setEmailType(newType);
-    if (newType === "approval" || newType === "approvalprod") {
-      setDeployOnly(false);
-    }
+    if (newType === "approval" || newType === "approvalprod") setDeployOnly(false);
   };
 
-  const getGreeting = () => {
-    if (recipient.trim().toLowerCase() === "there" || !recipient.trim()) return "Hi There,";
-    return `Hi ${recipient.trim()},`;
-  };
+  const getGreeting = () =>
+    recipient.trim().toLowerCase() === "there" || !recipient.trim()
+      ? "Hi There,"
+      : `Hi ${recipient.trim()},`;
 
   const getBody = () => {
-    let intro = "";
-    let attachLine = "";
-    const prefix = clientEnvPrefixes[client] || client;
-    const envType = envMap[emailType] || "QA";
+    const prefix   = clientEnvPrefixes[client] || client;
+    const envType  = envMap[emailType] || "QA";
     const envLabel = prefix + envType;
+    let intro = "", attachLine = "";
+
     if (emailType === "approval") {
-      intro = `Please find the deployment plan below for [Jira/Description], and please provide signoff to take the script to ${envLabel}.`;
+      intro      = `Please find the deployment plan below for [Jira/Description], and please provide signoff to take the script to ${envLabel}.`;
       attachLine = "Diffs: link\nTesting: link";
     } else if (emailType === "approvalprod") {
-      intro = `Please find the deployment plan below for [Jira/Description], and please provide signoff to take the script to ${envLabel}.`;
+      intro      = `Please find the deployment plan below for [Jira/Description], and please provide signoff to take the script to ${envLabel}.`;
       attachLine = "Client Signoff: Link\nTesting: link\nDiffs: link";
     } else if (emailType === "uat") {
-      intro = `Please can we deploy the below script from Test to UAT.`;
+      intro      = `Please can we deploy the below script from Test to UAT.`;
       attachLine = "Approval: link";
     } else if (emailType === "qa") {
-      intro = `Please can we deploy the below script from UAT to ${envLabel}.`;
+      intro      = `Please can we deploy the below script from UAT to ${envLabel}.`;
       attachLine = "Approval: link";
     } else if (emailType === "prod") {
-      // For PROD, show source as QA and target as PROD, with date placeholder
-      const sourceEnv = prefix + "QA";
-      const targetEnv = prefix + "PROD";
-      intro = `Please can we deploy the below script from ${sourceEnv} to ${targetEnv} as part of Weekly deployments on [Deployment Date].`;
+      intro      = `Please can we deploy the below script from ${prefix}QA to ${prefix}PROD as part of Weekly deployments on [Deployment Date].`;
       attachLine = "Approval: link";
     }
-    let deployOnlyLine = deployOnly ? "\n\nNB: To only deploy the script and not run or deploy the items." : "";
-    return `${getGreeting()}
+    const deployOnlyLine = deployOnly ? "\n\nNB: To only deploy the script and not run or deploy the items." : "";
+    return `${getGreeting()}\n\n${intro}${deployOnlyLine}\n\nDeployment Plan: ${scriptName || "[plan name]"}\n\n${attachLine}\n\nOps:\n\n${scriptContents || "--Regression Version\nD(S): s_online_member_body.sql MAL"}\n\nKind Regards,`;
+  };
 
-${intro}${deployOnlyLine}
-
-Deployment Plan: ${scriptName || "[plan name]"}
-
-${attachLine}
-
-Ops:\n\n${scriptContents || "--Regression Version\nD(S): s_online_member_body.sql MAL"}
-
-Kind Regards,`;
+  const copyEmail = () => {
+    navigator.clipboard.writeText(getBody()).then(() => {
+      if (showToast) showToast("Email copied to clipboard!", "success");
+    });
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.headerRow}>
-        <h2 style={{ margin: 0, textAlign: "center", width: "100%" }}>Deployment Email Builder</h2>
+    <div className="fade-up" style={{ maxWidth: 820, margin: "0 auto" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 className="ds-section-title">Deployment Email</h1>
+        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.95rem" }}>
+          Build standardised deployment emails instantly — fill in the fields and copy.
+        </p>
       </div>
-      <div style={styles.formRow}>
-        <label style={styles.label}>Recipient Name:</label>
-        <input value={recipient} onChange={e => setRecipient(e.target.value)} style={styles.input} placeholder="e.g. Aimee, Muhammad, There" />
-      </div>
-      <div style={styles.formRow}>
-        <label style={styles.label}>Script/Plan Name:</label>
-        <input value={scriptName} onChange={e => setScriptName(e.target.value)} style={styles.input} placeholder="e.g. 20260327_690SC_MMH10435_regression_versions.deploy" />
-      </div>
-      <div style={{...styles.formRow, flexDirection: "row", gap: 24, alignItems: "flex-end"}}>
-        <div style={{flex: 1, display: "flex", flexDirection: "column"}}>
-          <label style={styles.label}>Email Type:</label>
-          <select value={emailType} onChange={handleEmailTypeChange} style={styles.input}>
-            <option value="approval">Approval (to QA)</option>
-            <option value="approvalprod">Approval (to PROD)</option>
-            <option value="uat">Deploy to UAT</option>
-            <option value="qa">Deploy to QA</option>
-            <option value="prod">Deploy to PROD</option>
-          </select>
+
+      {/* Form Card */}
+      <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+          <div>
+            <label className="ds-label">Recipient Name</label>
+            <input
+              value={recipient}
+              onChange={e => setRecipient(e.target.value)}
+              className="ds-input"
+              placeholder="e.g. Aimee, Muhammad, There"
+            />
+          </div>
+          <div>
+            <label className="ds-label">Script / Plan Name</label>
+            <input
+              value={scriptName}
+              onChange={e => setScriptName(e.target.value)}
+              className="ds-input"
+              placeholder="e.g. 20260327_690SC_regression.deploy"
+            />
+          </div>
         </div>
-        <div style={{flex: 1, display: "flex", flexDirection: "column"}}>
-          <label style={styles.label}>Client:</label>
-          <select value={client} onChange={e => setClient(e.target.value)} style={styles.input}>
-            {selectableClients.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+          <div>
+            <label className="ds-label">Email Type</label>
+            <select value={emailType} onChange={handleEmailTypeChange} className="ds-select">
+              {emailTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="ds-label">Client</label>
+            <select value={client} onChange={e => setClient(e.target.value)} className="ds-select">
+              {selectableClients.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {emailType !== "approval" && emailType !== "approvalprod" && (
+          <label className="ds-checkbox-row" style={{ marginBottom: "1rem" }}>
+            <input type="checkbox" checked={deployOnly} onChange={e => setDeployOnly(e.target.checked)} />
+            <span style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>Deploy script <strong style={{ color: "var(--primary-light)" }}>ONLY</strong> (do not run)</span>
+          </label>
+        )}
+
+        <div>
+          <label className="ds-label">Script Contents (Ops)</label>
+          <textarea
+            value={scriptContents}
+            onChange={e => setScriptContents(e.target.value)}
+            className="ds-textarea"
+            placeholder={"--Regression Version\nD(S): s_online_member_body.sql MAL"}
+            style={{ minHeight: 120, fontFamily: "'JetBrains Mono', monospace", fontSize: "0.82rem" }}
+          />
         </div>
       </div>
-      {(emailType !== "approval" && emailType !== "approvalprod") && (
-        <div style={styles.formRow}>
-          <label style={styles.label}><input type="checkbox" checked={deployOnly} onChange={e => setDeployOnly(e.target.checked)} /> Deploy script ONLY</label>
+
+      {/* Preview + Copy */}
+      <div className="glass-card" style={{ padding: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: 10 }}>
+          <label className="ds-label" style={{ margin: 0 }}>Email Preview</label>
+          <button onClick={copyEmail} className="ds-btn ds-btn-primary">
+            Copy Email
+          </button>
         </div>
-      )}
-      <div style={styles.formRow}>
-        <label style={styles.label}>Script Contents (Ops):</label>
-        <textarea value={scriptContents} onChange={e => setScriptContents(e.target.value)} style={styles.textarea} placeholder={"--Regression Version\nD(S): s_online_member_body.sql MAL"} />
-      </div>
-      <div style={styles.formRow}>
-        <button onClick={() => {navigator.clipboard.writeText(getBody()); alert("Email copied!");}} style={styles.copyButton}>Copy Email</button>
-      </div>
-      <div style={styles.formRow}>
-        <label style={styles.label}>Preview:</label>
-        <textarea value={getBody()} readOnly style={{...styles.textarea, backgroundColor: "#222639", minHeight: 500}} />
+        <textarea
+          value={getBody()}
+          readOnly
+          className="ds-textarea"
+          style={{
+            minHeight: 420,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "0.82rem",
+            background: "rgba(0,0,0,0.25)",
+            lineHeight: 1.75,
+            resize: "vertical",
+          }}
+        />
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    width: "100%",
-    maxWidth: 900,
-    color: "#eee",
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-    alignItems: "center",
-    marginLeft: 220, // SideMenu width
-  },
-  headerRow: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  },
-  backButton: {
-    padding: "0.35rem 0.6rem",
-    borderRadius: 6,
-    backgroundColor: "#3a8bff",
-    border: "none",
-    color: "#fff",
-    cursor: "pointer",
-  },
-  formRow: {
-    width: "100%",
-    marginBottom: 14,
-    display: "flex",
-    flexDirection: "column",
-  },
-  label: {
-    fontWeight: 600,
-    marginBottom: 6,
-    color: "#eee",
-  },
-  input: {
-    padding: "0.5rem",
-    fontSize: "1rem",
-    borderRadius: 6,
-    backgroundColor: "#2c2c44",
-    color: "#eee",
-    border: "none",
-    outline: "none",
-    marginBottom: 2,
-  },
-  textarea: {
-    width: "100%",
-    minHeight: 50,
-    padding: "0.75rem 1rem",
-    fontSize: "1rem",
-    borderRadius: 8,
-    border: "none",
-    backgroundColor: "#2c2c44",
-    color: "#eee",
-    resize: "vertical",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  },
-  copyButton: {
-    padding: "0.4rem 1rem",
-    fontSize: "1rem",
-    fontWeight: 600,
-    borderRadius: 6,
-    border: "none",
-    backgroundColor: "#3a8bff",
-    color: "#fff",
-    cursor: "pointer",
-    marginTop: 8,
-    alignSelf: "flex-start",
-  },
-};
