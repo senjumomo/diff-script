@@ -27,12 +27,19 @@ const icons = {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     </svg>
   ),
+  copy: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+  ),
 };
 
 const menuItems = [
   { label: "Diff Script",           page: "home",       icon: icons.home },
   { label: "Compare Plans",         page: "compare",    icon: icons.compare },
   { label: "Existence Check",       page: "existence",  icon: icons.existence },
+  { label: "Copy Script",           page: "copyscript", icon: icons.copy },
   { label: "Deployment Email",      page: "email",      icon: icons.email },
   { label: "Deployment Validation", page: "validation", icon: icons.validation },
 ];

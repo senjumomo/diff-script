@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import ComparePage from "./ComparePage";
 import ExistenceCheckPage from "./ExistenceCheckPage";
+import CopyScriptPage from "./CopyScriptPage";
 import DeploymentEmailPage from "./DeploymentEmailPage";
 import SideMenu from "./SideMenu";
 import PageHeader from "./PageHeader";
@@ -242,6 +243,8 @@ function App() {
             <ComparePage showToast={showToast} />
           ) : page === "existence" ? (
             <ExistenceCheckPage showToast={showToast} />
+          ) : page === "copyscript" ? (
+            <CopyScriptPage showToast={showToast} />
           ) : page === "email" ? (
             <DeploymentEmailPage showToast={showToast} />
           ) : page === "validation" ? (
