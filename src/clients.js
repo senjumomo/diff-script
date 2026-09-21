@@ -50,3 +50,11 @@ export const clientPaths = {
 
 export const clients = Object.keys(clientPaths);
 export const environments = ["QA", "LIVE"];
+
+export const getFormsPath = (basePath) => {
+  if (!basePath) return "";
+  if (/\\sql$/i.test(basePath)) {
+    return basePath.replace(/\\sql$/i, "\\fmb");
+  }
+  return basePath.endsWith("\\") ? `${basePath}fmb` : `${basePath}\\fmb`;
+};

@@ -6,6 +6,7 @@ import DeploymentEmailPage from "./DeploymentEmailPage";
 import SideMenu from "./SideMenu";
 import PageHeader from "./PageHeader";
 import DeploymentValidationPage from "./DeploymentValidationPage";
+import FormsDiffPage from "./FormsDiffPage";
 import { clientPaths, clients, environments } from "./clients";
 
 // Exclude the special 'ALL' pseudo-client from app-wide client lists
@@ -239,7 +240,9 @@ function App() {
       <div className="app-shell">
         <SideMenu currentPage={page} onNavigate={setPage} />
         <main className="app-main">
-          {page === "compare" ? (
+          {page === "formsdiff" ? (
+            <FormsDiffPage showToast={showToast} />
+          ) : page === "compare" ? (
             <ComparePage showToast={showToast} />
           ) : page === "existence" ? (
             <ExistenceCheckPage showToast={showToast} />

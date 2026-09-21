@@ -33,10 +33,18 @@ const icons = {
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
     </svg>
   ),
+  forms: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M3 9h18"/>
+      <path d="M9 21V9"/>
+    </svg>
+  ),
 };
 
 const menuItems = [
   { label: "Diff Script",           page: "home",       icon: icons.home },
+  { label: "Forms Diff",            page: "formsdiff",  icon: icons.forms },
   { label: "Compare Plans",         page: "compare",    icon: icons.compare },
   { label: "Existence Check",       page: "existence",  icon: icons.existence },
   { label: "Copy Script",           page: "copyscript", icon: icons.copy },
