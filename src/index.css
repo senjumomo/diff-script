@@ -537,7 +537,7 @@ code, pre, .mono { font-family: var(--font-mono); }
   resize: vertical;
 }
 
-.ds-textarea--mono, .ds-textarea.mono {
+.ds-textarea--mono, .ds-textarea.mono, .ds-input--mono, .ds-input.mono {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   line-height: 1.65;
@@ -833,6 +833,39 @@ code, pre, .mono { font-family: var(--font-mono); }
   color: #fff;
   border: none;
   box-shadow: none;
+}
+
+/* ─── Segmented Controls ───────────────────────────────────── */
+.seg-control {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+}
+
+.seg-control__btn {
+  padding: 0.22rem 0.55rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.seg-control__btn:hover {
+  color: var(--text-primary);
+}
+
+.seg-control__btn--active {
+  background: var(--indigo);
+  color: #fff;
 }
 
 /* ─── Results & tables ─────────────────────────────────────── */

@@ -45,17 +45,21 @@ function App() {
   const initialEnvA = getEnvForClient(initialClientA);
   const initialEnvB = getEnvForClient(initialClientB);
 
-  const [inputText, setInputText]     = useState("");
-  const [outputFiles, setOutputFiles] = useState("");
-  const [clientA, setClientA]         = useState(initialClientA);
-  const [envA, setEnvA]               = useState(initialEnvA);
-  const [clientB, setClientB]         = useState(initialClientB);
-  const [envB, setEnvB]               = useState(initialEnvB);
-  const [diffCommands, setDiffCommands] = useState("");
-  const [diffAllQA, setDiffAllQA]     = useState(false);
-  const [diffAllProd, setDiffAllProd] = useState(false);
-  const [page, setPage]               = useState("home");
-  const [toasts, setToasts]           = useState([]);
+  const [inputText, setInputText]         = useState("");
+  const [outputFiles, setOutputFiles]     = useState("");
+  const [clientA, setClientA]             = useState(initialClientA);
+  const [envA, setEnvA]                   = useState(initialEnvA);
+  const [isCustomA, setIsCustomA]         = useState(false);
+  const [customPathA, setCustomPathA]     = useState("");
+  const [clientB, setClientB]             = useState(initialClientB);
+  const [envB, setEnvB]                   = useState(initialEnvB);
+  const [isCustomB, setIsCustomB]         = useState(false);
+  const [customPathB, setCustomPathB]     = useState("");
+  const [diffCommands, setDiffCommands]   = useState("");
+  const [diffAllQA, setDiffAllQA]         = useState(false);
+  const [diffAllProd, setDiffAllProd]     = useState(false);
+  const [page, setPage]                   = useState("home");
+  const [toasts, setToasts]               = useState([]);
 
   const showToast = useCallback((message, type = "success", duration = 2600) => {
     const id = ++_toastId;
@@ -73,43 +77,77 @@ function App() {
   };
 
   const getPathForFile = (basePath, fileName) => {
+    if (!basePath) return "";
+    const cleanPath = basePath.replace(/[\\/]+$/, "");
     if (fileName.toLowerCase().endsWith('.apx')) {
-      return basePath.replace(/\\sql$/i, '\\apex');
+      return cleanPath.replace(/\\sql$/i, '\\apex');
     }
-    return basePath;
+    return cleanPath;
   };
 
-  const updateOutputs = (text, clientAVal, envAVal, clientBVal, envBVal, diffAllQAMode, diffAllProdMode) => {
+  const updateOutputs = (
+    text,
+    clientAVal,
+    envAVal,
+    isCustomAVal,
+    customPathAVal,
+    clientBVal,
+    envBVal,
+    isCustomBVal,
+    customPathBVal,
+    diffAllQAMode,
+    diffAllProdMode
+  ) => {
     const files = extractFiles(text);
     setOutputFiles(files.join("\n"));
 
-    const pathA = clientPaths[clientAVal]?.[envAVal] || "";
+    const pathA = isCustomAVal
+      ? (customPathAVal || "").trim()
+      : (clientPaths[clientAVal]?.[envAVal] || "");
 
-    if (!files.length || !pathA) { setDiffCommands(""); return; }
+    if (!files.length || !pathA) {
+      setDiffCommands("");
+      return;
+    }
+
+    const labelA = isCustomAVal ? "Custom" : clientAVal;
+    const envLabelA = isCustomAVal ? "" : ` (${envAVal})`;
 
     if (diffAllQAMode || diffAllProdMode) {
       const targetEnv = diffAllQAMode ? "QA" : "LIVE";
-      const targetClients = filteredClients.filter(c => {
-        if (c === clientAVal) return false;
+      const targetClients = filteredClients.filter((c) => {
+        if (!isCustomAVal && c === clientAVal) return false;
         return clientPaths[c]?.[targetEnv] !== undefined;
       });
-      if (targetClients.length === 0) { setDiffCommands(""); return; }
+      if (targetClients.length === 0) {
+        setDiffCommands("");
+        return;
+      }
       let allCommands = [];
-      targetClients.forEach(targetClient => {
+      targetClients.forEach((targetClient) => {
         const basePathB = clientPaths[targetClient][targetEnv];
         allCommands.push(`\nREM ========================================`);
-        allCommands.push(`REM ${clientAVal} (${envAVal}) → ${targetClient} (${targetEnv})`);
+        allCommands.push(
+          `REM ${labelA}${envLabelA} → ${targetClient} (${targetEnv})`
+        );
         allCommands.push(`REM ========================================`);
-        files.forEach(file => {
+        files.forEach((file) => {
           const pathB = getPathForFile(basePathB, file);
           const pathAForFile = getPathForFile(pathA, file);
-          const diffFile = `${clientAVal}_to_${targetClient}_${file.replace(/\.(sql|apx)$/i, ".diff")}`;
-          allCommands.push(`diff -iwc "${pathB}\\${file}" "${pathAForFile}\\${file}" > ${diffFile}`);
+          const diffFile = `${labelA}_to_${targetClient}_${file.replace(
+            /\.(sql|apx)$/i,
+            ".diff"
+          )}`;
+          allCommands.push(
+            `diff -iwc "${pathB}\\${file}" "${pathAForFile}\\${file}" > ${diffFile}`
+          );
         });
       });
       setDiffCommands(allCommands.join("\n"));
     } else {
-      const basePathB = clientPaths[clientBVal]?.[envBVal] || "";
+      const basePathB = isCustomBVal
+        ? (customPathBVal || "").trim()
+        : (clientPaths[clientBVal]?.[envBVal] || "");
       if (basePathB) {
         const diffs = files.map((file) => {
           const pathB = getPathForFile(basePathB, file);
@@ -127,7 +165,19 @@ function App() {
   const onInputChange = (e) => {
     const val = e.target.value;
     setInputText(val);
-    updateOutputs(val, clientA, envA, clientB, envB, diffAllQA, diffAllProd);
+    updateOutputs(
+      val,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
   };
 
   const onClientAChange = (e) => {
@@ -135,13 +185,72 @@ function App() {
     setClientA(val);
     const env = getEnvForClient(val);
     setEnvA(env);
-    updateOutputs(inputText, val, env, clientB, envB, diffAllQA, diffAllProd);
+    updateOutputs(
+      inputText,
+      val,
+      env,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
   };
 
   const onEnvAChange = (e) => {
     const val = e.target.value;
     setEnvA(val);
-    updateOutputs(inputText, clientA, val, clientB, envB, diffAllQA, diffAllProd);
+    updateOutputs(
+      inputText,
+      clientA,
+      val,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
+  };
+
+  const onToggleCustomA = (custom) => {
+    setIsCustomA(custom);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      custom,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
+  };
+
+  const onCustomPathAChange = (e) => {
+    const val = e.target.value;
+    setCustomPathA(val);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      val,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
   };
 
   const onClientBChange = (e) => {
@@ -149,27 +258,110 @@ function App() {
     setClientB(val);
     const env = getEnvForClient(val);
     setEnvB(env);
-    updateOutputs(inputText, clientA, envA, val, env, diffAllQA, diffAllProd);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      val,
+      env,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
   };
 
   const onEnvBChange = (e) => {
     const val = e.target.value;
     setEnvB(val);
-    updateOutputs(inputText, clientA, envA, clientB, val, diffAllQA, diffAllProd);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      val,
+      isCustomB,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
+  };
+
+  const onToggleCustomB = (custom) => {
+    setIsCustomB(custom);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      custom,
+      customPathB,
+      diffAllQA,
+      diffAllProd
+    );
+  };
+
+  const onCustomPathBChange = (e) => {
+    const val = e.target.value;
+    setCustomPathB(val);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      val,
+      diffAllQA,
+      diffAllProd
+    );
   };
 
   const onDiffAllQAToggle = () => {
     const newValue = !diffAllQA;
     setDiffAllQA(newValue);
     if (newValue) setDiffAllProd(false);
-    updateOutputs(inputText, clientA, envA, clientB, envB, newValue, false);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      newValue,
+      false
+    );
   };
 
   const onDiffAllProdToggle = () => {
     const newValue = !diffAllProd;
     setDiffAllProd(newValue);
     if (newValue) setDiffAllQA(false);
-    updateOutputs(inputText, clientA, envA, clientB, envB, false, newValue);
+    updateOutputs(
+      inputText,
+      clientA,
+      envA,
+      isCustomA,
+      customPathA,
+      clientB,
+      envB,
+      isCustomB,
+      customPathB,
+      false,
+      newValue
+    );
   };
 
   const copyToClipboard = () => {
@@ -183,7 +375,15 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `diff_commands_${envA}_${envB}.bat`;
+    const fileLabelA = isCustomA ? "Custom" : `${clientA}_${envA}`;
+    const fileLabelB = diffAllQA
+      ? "All_QA"
+      : diffAllProd
+      ? "All_LIVE"
+      : isCustomB
+      ? "Custom"
+      : `${clientB}_${envB}`;
+    a.download = `diff_commands_${fileLabelA}_${fileLabelB}.bat`;
     a.click();
     URL.revokeObjectURL(url);
     showToast("Batch file downloaded!", "success");
@@ -198,34 +398,81 @@ function App() {
     [diffCommands]
   );
 
-  const routeLabel = diffAllQA
-    ? `${clientA} → All QA`
-    : diffAllProd
-    ? `${clientA} → All LIVE`
-    : `${clientA} (${envA}) → ${clientB} (${envB})`;
+  const labelA = isCustomA ? "Custom" : `${clientA} (${envA})`;
+  const labelB = isCustomB ? "Custom" : `${clientB} (${envB})`;
 
-  const renderClientPanel = (tag, tagClass, clientVal, onClientChange, envVal, onEnvChange) => (
+  const routeLabel = diffAllQA
+    ? `${labelA} → All QA`
+    : diffAllProd
+    ? `${labelA} → All LIVE`
+    : `${labelA} → ${labelB}`;
+
+  const renderClientPanel = (
+    tag,
+    tagClass,
+    isCustom,
+    onToggleCustom,
+    clientVal,
+    onClientChange,
+    envVal,
+    onEnvChange,
+    customPathVal,
+    onCustomPathChange
+  ) => (
     <div className="glow-card">
       <div className="glow-card__inner">
-        <span className={`panel-tag panel-tag--${tagClass}`} style={{ marginBottom: 12, display: "inline-block" }}>
-          {tag}
-        </span>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 110 }}>
-            <label className="ds-label">Client</label>
-            <select value={clientVal} onChange={onClientChange} className="ds-select">
-              {filteredClients.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span className={`panel-tag panel-tag--${tagClass}`} style={{ margin: 0 }}>
+            {tag}
+          </span>
+          <div className="seg-control">
+            <button
+              type="button"
+              className={`seg-control__btn${!isCustom ? " seg-control__btn--active" : ""}`}
+              onClick={() => onToggleCustom(false)}
+            >
+              Preset
+            </button>
+            <button
+              type="button"
+              className={`seg-control__btn${isCustom ? " seg-control__btn--active" : ""}`}
+              onClick={() => onToggleCustom(true)}
+            >
+              Custom
+            </button>
           </div>
-          {!isSingleEnvClient(clientVal) && (
+        </div>
+
+        {isCustom ? (
+          <div>
+            <label className="ds-label">Custom Path</label>
+            <input
+              type="text"
+              value={customPathVal}
+              onChange={onCustomPathChange}
+              placeholder="e.g. C:\Deployments\sql or Q:\Custom\sql"
+              className="ds-input ds-input--mono"
+              spellCheck={false}
+            />
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 110 }}>
-              <label className="ds-label">Environment</label>
-              <select value={envVal} onChange={onEnvChange} className="ds-select">
-                {environments.map(e => <option key={e} value={e}>{e}</option>)}
+              <label className="ds-label">Client</label>
+              <select value={clientVal} onChange={onClientChange} className="ds-select">
+                {filteredClients.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-          )}
-        </div>
+            {!isSingleEnvClient(clientVal) && (
+              <div style={{ flex: 1, minWidth: 110 }}>
+                <label className="ds-label">Environment</label>
+                <select value={envVal} onChange={onEnvChange} className="ds-select">
+                  {environments.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -291,11 +538,33 @@ function App() {
                 </section>
 
                 <aside className="bento__config flow-grid">
-                  {renderClientPanel("Source", "from", clientA, onClientAChange, envA, onEnvAChange)}
+                  {renderClientPanel(
+                    "Source",
+                    "from",
+                    isCustomA,
+                    onToggleCustomA,
+                    clientA,
+                    onClientAChange,
+                    envA,
+                    onEnvAChange,
+                    customPathA,
+                    onCustomPathAChange
+                  )}
                   {!(diffAllQA || diffAllProd) && (
                     <>
                       <div className="flow-arrow" aria-hidden="true">→</div>
-                      {renderClientPanel("Target", "to", clientB, onClientBChange, envB, onEnvBChange)}
+                      {renderClientPanel(
+                        "Target",
+                        "to",
+                        isCustomB,
+                        onToggleCustomB,
+                        clientB,
+                        onClientBChange,
+                        envB,
+                        onEnvBChange,
+                        customPathB,
+                        onCustomPathBChange
+                      )}
                     </>
                   )}
                   <div className="glow-card">
