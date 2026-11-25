@@ -39,6 +39,10 @@ export const clientPaths = {
     QA: "Q:\\Bonitas\\qa\\sql",
     LIVE: "Q:\\Bonitas\\live\\sql",
   },
+  HIPGI: {
+    QA: "Q:\\HIPGI\\qa\\sql",
+    LIVE: "Q:\\HIPGI\\live\\sql",
+  },
   Test: {
     TEST: "Q:\\iThrive\\test\\sql",
   },

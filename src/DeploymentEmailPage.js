@@ -5,6 +5,7 @@ import { clientPaths } from "./clients";
 const clientEnvPrefixes = {
   BONITAS: "BHIP", HIP: "HIP", HMS: "HMS", ZMC: "ZMC", ZMG: "ZMG",
   ZMZ: "ZMZ", Ship: "SHIP", Bestmed: "BIT", MMI: "MMI", FML: "FML",
+  HIPGI: "HIPGI",
 };
 
 const selectableClients = Object.keys(clientPaths).filter(
