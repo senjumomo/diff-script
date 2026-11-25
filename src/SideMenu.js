@@ -1,5 +1,4 @@
 import React from "react";
-import { FaGithub } from "react-icons/fa";
 
 const icons = {
   home: (
@@ -15,16 +14,6 @@ const icons = {
   existence: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-  ),
-  email: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>
-    </svg>
-  ),
-  validation: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     </svg>
   ),
   copy: (
@@ -43,13 +32,11 @@ const icons = {
 };
 
 const menuItems = [
-  { label: "Diff Script",           page: "home",       icon: icons.home },
-  { label: "Forms Diff",            page: "formsdiff",  icon: icons.forms },
-  { label: "Compare Plans",         page: "compare",    icon: icons.compare },
-  { label: "Existence Check",       page: "existence",  icon: icons.existence },
-  { label: "Copy Script",           page: "copyscript", icon: icons.copy },
-  { label: "Deployment Email",      page: "email",      icon: icons.email },
-  { label: "Deployment Validation", page: "validation", icon: icons.validation },
+  { label: "Diff Script",     page: "home",       icon: icons.home },
+  { label: "Forms Diff",      page: "formsdiff",  icon: icons.forms },
+  { label: "Compare Plans",   page: "compare",    icon: icons.compare },
+  { label: "Existence Check", page: "existence",  icon: icons.existence },
+  { label: "Copy Script",     page: "copyscript", icon: icons.copy },
 ];
 
 function SideMenu({ currentPage, onNavigate }) {
@@ -80,15 +67,6 @@ function SideMenu({ currentPage, onNavigate }) {
 
       <div className="nav-rail__footer">
         <span className="nav-rail__version">v2.1</span>
-        <a
-          href="https://github.com/senjumomo/diff-script"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="nav-rail__github"
-          aria-label="GitHub repository"
-        >
-          <FaGithub size={16} />
-        </a>
       </div>
     </aside>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PageHeader from "./PageHeader";
 import { clientPaths, clients, environments } from "./clients";
+import { saveOrDownloadFile } from "./downloadHelper";
 
 const isSingleEnvClient = (client) => client === "Test" || client === "Regression";
 const getEnvForClient   = (client) =>
@@ -52,16 +53,12 @@ export default function ExistenceCheckPage({ showToast }) {
     });
   };
 
-  const downloadBatFile = () => {
+  const downloadBatFile = async () => {
     if (!batCommands.trim()) return;
-    const blob = new Blob([batCommands], { type: "text/plain;charset=utf-8" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = "existence_check.bat";
-    a.click();
-    URL.revokeObjectURL(url);
-    if (showToast) showToast("Batch file downloaded!", "success");
+    const res = await saveOrDownloadFile({ filename: "existence_check.bat", content: batCommands });
+    if (res?.success && showToast) {
+      showToast("Batch file saved!", "success");
+    }
   };
 
   return (

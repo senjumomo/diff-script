@@ -2,12 +2,11 @@ import React, { useState, useCallback, useMemo } from "react";
 import ComparePage from "./ComparePage";
 import ExistenceCheckPage from "./ExistenceCheckPage";
 import CopyScriptPage from "./CopyScriptPage";
-import DeploymentEmailPage from "./DeploymentEmailPage";
 import SideMenu from "./SideMenu";
 import PageHeader from "./PageHeader";
-import DeploymentValidationPage from "./DeploymentValidationPage";
 import FormsDiffPage from "./FormsDiffPage";
 import { clientPaths, clients, environments } from "./clients";
+import { saveOrDownloadFile } from "./downloadHelper";
 
 // Exclude the special 'ALL' pseudo-client from app-wide client lists
 const filteredClients = clients.filter(c => c !== 'ALL');
@@ -369,12 +368,8 @@ function App() {
     navigator.clipboard.writeText(diffCommands).then(() => showToast("Diff commands copied!", "success"));
   };
 
-  const downloadBatFile = () => {
+  const downloadBatFile = async () => {
     if (!diffCommands.trim()) return;
-    const blob = new Blob([diffCommands], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
     const fileLabelA = isCustomA ? "Custom" : `${clientA}_${envA}`;
     const fileLabelB = diffAllQA
       ? "All_QA"
@@ -383,10 +378,11 @@ function App() {
       : isCustomB
       ? "Custom"
       : `${clientB}_${envB}`;
-    a.download = `diff_commands_${fileLabelA}_${fileLabelB}.bat`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Batch file downloaded!", "success");
+    const filename = `diff_commands_${fileLabelA}_${fileLabelB}.bat`;
+    const res = await saveOrDownloadFile({ filename, content: diffCommands });
+    if (res?.success) {
+      showToast("Batch file saved!", "success");
+    }
   };
 
   const fileCount = useMemo(
@@ -495,10 +491,6 @@ function App() {
             <ExistenceCheckPage showToast={showToast} />
           ) : page === "copyscript" ? (
             <CopyScriptPage showToast={showToast} />
-          ) : page === "email" ? (
-            <DeploymentEmailPage showToast={showToast} />
-          ) : page === "validation" ? (
-            <DeploymentValidationPage showToast={showToast} />
           ) : (
             <div className="page page--home">
               <div className="page-top">

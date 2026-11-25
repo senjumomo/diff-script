@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import JSZip from "jszip";
 import PageHeader from "./PageHeader";
 import { clientPaths, clients, environments, getFormsPath } from "./clients";
+import { saveOrDownloadFile } from "./downloadHelper";
 
 const filteredClients = clients.filter(c => c !== "ALL");
 
@@ -262,16 +263,13 @@ export default function FormsDiffPage({ showToast }) {
     });
   };
 
-  const downloadBatFile = () => {
+  const downloadBatFile = async () => {
     if (!batContent.trim()) return;
-    const blob = new Blob([batContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `forms_diff_${clientA}_${diffAllQA ? "ALL_QA" : diffAllProd ? "ALL_LIVE" : clientB}.bat`;
-    a.click();
-    URL.revokeObjectURL(url);
-    if (showToast) showToast("Forms diff .bat downloaded!", "success");
+    const filename = `forms_diff_${clientA}_${diffAllQA ? "ALL_QA" : diffAllProd ? "ALL_LIVE" : clientB}.bat`;
+    const res = await saveOrDownloadFile({ filename, content: batContent });
+    if (res?.success && showToast) {
+      showToast("Forms diff .bat saved!", "success");
+    }
   };
 
   const downloadZipBundle = async () => {
@@ -298,13 +296,11 @@ export default function FormsDiffPage({ showToast }) {
       }
 
       const zipBlob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `forms_diff_package_${clientA}_vs_${diffAllQA ? "ALL_QA" : diffAllProd ? "ALL_LIVE" : clientB}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
-      if (showToast) showToast("ZIP package downloaded (contains diff.exe, ExamDiff, & run_diff.bat)!", "success");
+      const filename = `forms_diff_package_${clientA}_vs_${diffAllQA ? "ALL_QA" : diffAllProd ? "ALL_LIVE" : clientB}.zip`;
+      const res = await saveOrDownloadFile({ filename, content: zipBlob, mimeType: "application/zip" });
+      if (res?.success && showToast) {
+        showToast("ZIP package saved (contains diff.exe, ExamDiff, & run_diff.bat)!", "success");
+      }
     } catch (err) {
       console.error("ZIP creation error:", err);
       if (showToast) showToast("Failed to create ZIP package", "error");
